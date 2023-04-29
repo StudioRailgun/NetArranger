@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class NetworkParser {
@@ -8,11 +9,11 @@ public class NetworkParser {
     InputStream incomingStream;
     OutputStream outgoingStream;
     
-    CopyOnWriteArrayList<NetworkMessage> incomingMessageQueue = new CopyOnWriteArrayList();
-    CopyOnWriteArrayList<NetworkMessage> outgoingMessageQueue = new CopyOnWriteArrayList();
+    CopyOnWriteArrayList<NetworkMessage> incomingMessageQueue = new CopyOnWriteArrayList<NetworkMessage>();
+    CopyOnWriteArrayList<NetworkMessage> outgoingMessageQueue = new CopyOnWriteArrayList<NetworkMessage>();
     
-    CopyOnWriteArrayList<Byte> incomingByteQueue = new CopyOnWriteArrayList();
-    CopyOnWriteArrayList<Byte> outgoingByteQueue = new CopyOnWriteArrayList();
+    CopyOnWriteArrayList<Byte> incomingByteQueue = new CopyOnWriteArrayList<Byte>();
+    CopyOnWriteArrayList<Byte> outgoingByteQueue = new CopyOnWriteArrayList<Byte>();
     
     
     
@@ -73,6 +74,22 @@ public class NetworkParser {
     
     public void addOutgoingMessage(NetworkMessage message){
         outgoingMessageQueue.add(message);
+    }
+
+    /**
+     * Copies the current contents of the incoming messages queue to a provided list
+     * @param messages The list to copy the incoming messages to
+     */
+    public void copyIncomingMessages(List<NetworkMessage> messages){
+        messages.addAll(incomingMessageQueue);
+    }
+
+    /**
+     * Copies the current contents of the outgoing messages queue to a provided list
+     * @param messages The list to copy the outgoing messages to
+     */
+    public void copyOutgoingMessages(List<NetworkMessage> messages){
+        messages.addAll(outgoingMessageQueue);
     }
     
 }
