@@ -56,6 +56,9 @@ public class TypedMessage extends SourceGenerator {
                 case "FIXED_DOUBLE":
                     fixedSizeVariableMap.put(data.getName(), true);
                     break;
+                case "BYTE_ARRAY":
+                    fixedSizeVariableMap.put(data.getName(), false);
+                    break;
             }
         }
         //construct map of whether the message type is variable size or not
@@ -104,6 +107,9 @@ public class TypedMessage extends SourceGenerator {
                     break;
                 case "VAR_STRING":
                     fullFile = fullFile + "    String " + variable.getName() + ";\n";
+                    break;
+                case "BYTE_ARRAY":
+                    fullFile = fullFile + "    byte[] " + variable.getName() + ";\n";
                     break;
                 case "FIXED_DOUBLE":
                     fullFile = fullFile + "    double " + variable.getName() + ";\n";
@@ -163,6 +169,16 @@ public class TypedMessage extends SourceGenerator {
                     fullFile = fullFile + "    }\n\n";
                     //setter
                     fullFile = fullFile + "    public void set" + variable.getName() + "(String " + variable.getName() + ") {\n";
+                    fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
+                    fullFile = fullFile + "    }\n\n";
+                    break;
+                case "BYTE_ARRAY":
+                    //getter
+                    fullFile = fullFile + "    public byte[] get" + variable.getName() + "() {\n";
+                    fullFile = fullFile + "        return " + variable.getName() + ";\n";
+                    fullFile = fullFile + "    }\n\n";
+                    //setter
+                    fullFile = fullFile + "    public void set" + variable.getName() + "(byte[] " + variable.getName() + ") {\n";
                     fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
                     break;
@@ -230,6 +246,9 @@ public class TypedMessage extends SourceGenerator {
                     case "VAR_STRING":
                         fullFile = fullFile + "String " + data + ",";
                         break;
+                    case "BYTE_ARRAY":
+                        fullFile = fullFile + "byte[] " + data + ",";
+                        break;
                     case "FIXED_DOUBLE":
                         fullFile = fullFile + "double " + data + ",";
                         break;
@@ -278,6 +297,9 @@ public class TypedMessage extends SourceGenerator {
                     case "VAR_STRING":
                         packetSizeCalculation = packetSizeCalculation + "+4+" + variable + ".length()"; // 4 for integer header
                         break;
+                    case "BYTE_ARRAY":
+                        packetSizeCalculation = packetSizeCalculation + "+4+" + variable + ".length"; // 4 for integer header
+                        break;
                     case "FIXED_DOUBLE":
                         packetSizeCalculation = packetSizeCalculation + "+8";
                         break;
@@ -324,6 +346,19 @@ public class TypedMessage extends SourceGenerator {
                         fullFile = fullFile + "                    rawBytes[" + offset + offsetFunctions + "+i] = stringBytes[i];\n";
                         fullFile = fullFile + "                }\n";
                         offsetFunctions = offsetFunctions + "+" + data + ".length()";
+                        break;
+                    case "BYTE_ARRAY":
+                        //serialize header that contains length of byte array
+                        fullFile = fullFile + "                intValues = ByteStreamUtils.serializeIntToBytes(" + data + ".length);\n";
+                        fullFile = fullFile + "                for(int i = 0; i < 4; i++){\n";
+                        fullFile = fullFile + "                    rawBytes[" + offset + offsetFunctions + "+i] = intValues[i];\n";
+                        fullFile = fullFile + "                }\n";
+                        offset = offset + 4;
+                        //serialize actual bytes
+                        fullFile = fullFile + "                for(int i = 0; i < " + data + ".length; i++){\n";
+                        fullFile = fullFile + "                    rawBytes[" + offset + offsetFunctions + "+i] = " + data + "[i];\n";
+                        fullFile = fullFile + "                }\n";
+                        offsetFunctions = offsetFunctions + "+" + data + ".length";
                         break;
                     case "FIXED_DOUBLE":
                         fullFile = fullFile + "                intValues = ByteStreamUtils.serializeDoubleToBytes(" + data + ");\n";
@@ -383,6 +418,9 @@ public class TypedMessage extends SourceGenerator {
                 case "VAR_STRING":
                     rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popStringFromByteQueue(byteStream));\n";
                     break;
+                case "BYTE_ARRAY":
+                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popByteArrayFromByteQueue(byteStream));\n";
+                    break;
                 case "FIXED_DOUBLE":
                     rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popDoubleFromByteQueue(byteStream));\n";
                     break;
@@ -435,6 +473,33 @@ public class TypedMessage extends SourceGenerator {
                     rVal = rVal + "        }\n";
                     break;
                 case "VAR_STRING":
+                    currentLength = currentLength + 4; // size of int
+                    rVal = rVal + "        int " + currentData + "Size = 0;\n";
+                    rVal = rVal + "        if(currentStreamLength < " + currentLength + "){\n"; // have to account for integer header
+                    rVal = rVal + "            return false;\n";
+                    rVal = rVal + "        } else {\n";
+                    if(variableLengthVars.length() > 0){
+                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + " + variableLengthVars + " + 0));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + " + variableLengthVars + " + 1));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + " + variableLengthVars + " + 2));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + " + variableLengthVars + " + 3));\n";
+                    } else {
+                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + 0));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + 1));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + 2));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + 3));\n";
+                    }
+                    rVal = rVal + "            " + currentData + "Size = ByteStreamUtils.popIntFromByteQueue(temporaryByteQueue);\n";
+                    rVal = rVal + "        }\n";
+                    if(variableLengthVars.length() > 0){
+                        variableLengthVars = variableLengthVars + " + ";
+                    }
+                    variableLengthVars = variableLengthVars + currentData + "Size";
+                    rVal = rVal + "        if(currentStreamLength < " + currentLength + " + " + variableLengthVars + "){\n";
+                    rVal = rVal + "            return false;\n";
+                    rVal = rVal + "        }\n";
+                    break;
+                case "BYTE_ARRAY":
                     currentLength = currentLength + 4; // size of int
                     rVal = rVal + "        int " + currentData + "Size = 0;\n";
                     rVal = rVal + "        if(currentStreamLength < " + currentLength + "){\n"; // have to account for integer header

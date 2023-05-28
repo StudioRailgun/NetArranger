@@ -76,6 +76,15 @@ public class ByteStreamUtils {
         return rVal;
     }
 
+    public static byte[] popByteArrayFromByteQueue(List<Byte> queue){
+        int length = popIntFromByteQueue(queue);
+        byte[] bytes = new byte[length];
+        for(int i = 0; i < length; i++){
+            bytes[i] = queue.remove(0);
+        }
+        return bytes;
+    }
+
     public static double popDoubleFromByteQueue(List<Byte> queue){
         double rVal = -1;
         bufferLock.acquireUninterruptibly();
