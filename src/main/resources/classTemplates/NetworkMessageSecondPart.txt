@@ -12,10 +12,10 @@
         return rawBytes;
     }
     
-    public static NetworkMessage parseBytestreamForMessage(List<Byte> byteStream){
+    public static NetworkMessage parseBytestreamForMessage(CircularByteBuffer byteBuffer){
         NetworkMessage rVal = null;
         byte firstByte;
         byte secondByte;
-        if(byteStream.size() > 1){
-            firstByte = byteStream.get(0);
+        if(byteBuffer.getRemaining() > 1){
+            firstByte = byteBuffer.peek();
             switch(firstByte){

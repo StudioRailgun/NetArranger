@@ -12,7 +12,7 @@ public class NetworkParser {
     CopyOnWriteArrayList<NetworkMessage> incomingMessageQueue = new CopyOnWriteArrayList<NetworkMessage>();
     CopyOnWriteArrayList<NetworkMessage> outgoingMessageQueue = new CopyOnWriteArrayList<NetworkMessage>();
     
-    CopyOnWriteArrayList<Byte> incomingByteQueue = new CopyOnWriteArrayList<Byte>();
+    CircularByteBuffer incomingByteBuffer = new CircularByteBuffer(64 * 1024 * 124);
     CopyOnWriteArrayList<Byte> outgoingByteQueue = new CopyOnWriteArrayList<Byte>();
     
     
@@ -26,24 +26,24 @@ public class NetworkParser {
         
     }
     
+    static final int READ_BUFFER_SIZE = 64 * 1024 * 1024;
+    byte[] readBuffer = new byte[READ_BUFFER_SIZE];
     public void readMessagesIn(){
         try {
             //read in bytes
-            int nextValue = 0;
+            int bytesRead = 0;
             byte currentByte = -1;
             while(incomingStream.available() > 0){
-                nextValue = incomingStream.read();
-                if(nextValue != -1){
-                    currentByte = (byte)nextValue;
-                    incomingByteQueue.add(currentByte);
-//                    System.out.println(currentByte);
+                // nextValue = incomingStream.read();
+                bytesRead = incomingStream.read(readBuffer, 0, READ_BUFFER_SIZE);
+                if(bytesRead > 0){
+                    incomingByteBuffer.add(readBuffer, bytesRead);
                 }
-                //add bytes to some kind of queue
             }
             //parse byte queue for messages
             //for each message, append to clientIncomingMessageQueue
             NetworkMessage newMessage;
-            while((newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteQueue))!=null){
+            while((newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer))!=null){
                 incomingMessageQueue.add(newMessage);
             }
         } catch (IOException ex) {

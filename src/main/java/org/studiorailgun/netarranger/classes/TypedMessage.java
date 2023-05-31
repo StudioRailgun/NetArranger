@@ -79,6 +79,7 @@ public class TypedMessage extends SourceGenerator {
         //imports
         //attach ByteUtils
         fullFile = fullFile + "import " + config.getPackageName() + ".util.ByteStreamUtils;\n";
+        fullFile = fullFile + "import " + config.getPackageName() + ".net.raw.CircularByteBuffer;\n";
         fullFile = fullFile + "import java.util.LinkedList;\n";
         fullFile = fullFile + "import java.util.List;\n\n";
         
@@ -196,13 +197,12 @@ public class TypedMessage extends SourceGenerator {
         }
         
         //strip packet header
-        fullFile = fullFile + "    static void stripPacketHeader(List<Byte> byteStream){\n";
-        fullFile = fullFile + "        byteStream.remove(0);\n";
-        fullFile = fullFile + "        byteStream.remove(0);\n";
+        fullFile = fullFile + "    static void stripPacketHeader(CircularByteBuffer byteBuffer){\n";
+        fullFile = fullFile + "        byteBuffer.read(2);\n";
         fullFile = fullFile + "    }\n\n";
         
         //parse check function
-        fullFile = fullFile + "    public static boolean canParseMessage(List<Byte> byteStream, byte secondByte){\n";
+        fullFile = fullFile + "    public static boolean canParseMessage(CircularByteBuffer byteBuffer, byte secondByte){\n";
         fullFile = fullFile + "        switch(secondByte){\n";
         for(MessageType type : cat.getMessageTypes()){
             if(fixedSizeMessageMap.get(type)){
@@ -384,7 +384,7 @@ public class TypedMessage extends SourceGenerator {
     static String getFixedSizeParseCheck(Category cat, MessageType type){
         String rVal = "";
         rVal = rVal + "            case TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + ":\n";
-        rVal = rVal + "                if(byteStream.size() >= TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + "_SIZE){\n";
+        rVal = rVal + "                if(byteBuffer.getRemaining() >= TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + "_SIZE){\n";
         rVal = rVal + "                    return true;\n";
         rVal = rVal + "                } else {\n";
         rVal = rVal + "                    return false;\n";
@@ -395,34 +395,34 @@ public class TypedMessage extends SourceGenerator {
     static String getVariableSizeParseCheck(Category cat, MessageType type){
         String rVal = "";
         rVal = rVal + "            case TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + ":\n";
-        rVal = rVal + "                return " + cat.getCategoryName() + "Message.canParse" + type.getMessageName() + "Message(byteStream);\n";
+        rVal = rVal + "                return " + cat.getCategoryName() + "Message.canParse" + type.getMessageName() + "Message(byteBuffer);\n";
         return rVal;
     }
     
     static String getParseFunction(Category cat, MessageType type, HashMap<String,String> typeMap){
         String rVal = "";
-        rVal = rVal + "    public static " + cat.getCategoryName() + "Message parse" + type.getMessageName() + "Message(List<Byte> byteStream){\n";
+        rVal = rVal + "    public static " + cat.getCategoryName() + "Message parse" + type.getMessageName() + "Message(CircularByteBuffer byteBuffer){\n";
         rVal = rVal + "        " + cat.getCategoryName() + "Message rVal = new " + cat.getCategoryName() + "Message(" + cat.getCategoryName() + "MessageType." + type.getMessageName().toUpperCase() + ");\n";
-        rVal = rVal + "        stripPacketHeader(byteStream);\n";
+        rVal = rVal + "        stripPacketHeader(byteBuffer);\n";
         for(String data : type.getData()){
             switch(typeMap.get(data)){
                 case "FIXED_INT":
-                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popIntFromByteQueue(byteStream));\n";
+                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popIntFromByteQueue(byteBuffer));\n";
                     break;
                 case "FIXED_FLOAT":
-                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popFloatFromByteQueue(byteStream));\n";
+                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popFloatFromByteQueue(byteBuffer));\n";
                     break;
                 case "FIXED_LONG":
-                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popLongFromByteQueue(byteStream));\n";
+                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popLongFromByteQueue(byteBuffer));\n";
                     break;
                 case "VAR_STRING":
-                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popStringFromByteQueue(byteStream));\n";
+                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popStringFromByteQueue(byteBuffer));\n";
                     break;
                 case "BYTE_ARRAY":
-                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popByteArrayFromByteQueue(byteStream));\n";
+                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popByteArrayFromByteQueue(byteBuffer));\n";
                     break;
                 case "FIXED_DOUBLE":
-                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popDoubleFromByteQueue(byteStream));\n";
+                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popDoubleFromByteQueue(byteBuffer));\n";
                     break;
             }
         }
@@ -433,8 +433,8 @@ public class TypedMessage extends SourceGenerator {
     
     static String getParseCheckTypeFunction(Category cat, MessageType type, HashMap<String,String> typeMap){
         String rVal = "";
-        rVal = rVal + "    public static boolean canParse" + type.getMessageName() + "Message(List<Byte> byteStream){\n";
-        rVal = rVal + "        int currentStreamLength = byteStream.size();\n";
+        rVal = rVal + "    public static boolean canParse" + type.getMessageName() + "Message(CircularByteBuffer byteBuffer){\n";
+        rVal = rVal + "        int currentStreamLength = byteBuffer.getRemaining();\n";
         rVal = rVal + "        List<Byte> temporaryByteQueue = new LinkedList();\n";
         int currentLength = 2;
         //Need to keep track of the variables that themselves have variable length
@@ -479,15 +479,15 @@ public class TypedMessage extends SourceGenerator {
                     rVal = rVal + "            return false;\n";
                     rVal = rVal + "        } else {\n";
                     if(variableLengthVars.length() > 0){
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + " + variableLengthVars + " + 0));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + " + variableLengthVars + " + 1));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + " + variableLengthVars + " + 2));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + " + variableLengthVars + " + 3));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 0));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 1));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 2));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 3));\n";
                     } else {
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + 0));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + 1));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + 2));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + 3));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 0));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 1));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 2));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 3));\n";
                     }
                     rVal = rVal + "            " + currentData + "Size = ByteStreamUtils.popIntFromByteQueue(temporaryByteQueue);\n";
                     rVal = rVal + "        }\n";
@@ -506,15 +506,15 @@ public class TypedMessage extends SourceGenerator {
                     rVal = rVal + "            return false;\n";
                     rVal = rVal + "        } else {\n";
                     if(variableLengthVars.length() > 0){
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + " + variableLengthVars + " + 0));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + " + variableLengthVars + " + 1));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + " + variableLengthVars + " + 2));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + " + variableLengthVars + " + 3));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 0));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 1));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 2));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 3));\n";
                     } else {
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + 0));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + 1));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + 2));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteStream.get(" + (currentLength - 4) + " + 3));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 0));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 1));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 2));\n";
+                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 3));\n";
                     }
                     rVal = rVal + "            " + currentData + "Size = ByteStreamUtils.popIntFromByteQueue(temporaryByteQueue);\n";
                     rVal = rVal + "        }\n";

@@ -3,20 +3,18 @@ package org.studiorailgun.netarranger;
 import com.google.gson.Gson;
 
 import org.studiorailgun.netarranger.classes.ByteStreamUtils;
+import org.studiorailgun.netarranger.classes.CircularByteBuffer;
 import org.studiorailgun.netarranger.classes.NetworkMessage;
 import org.studiorailgun.netarranger.classes.NetworkParser;
 import org.studiorailgun.netarranger.classes.TypeBytes;
 import org.studiorailgun.netarranger.classes.TypedMessage;
 import org.studiorailgun.netarranger.model.Category;
 import org.studiorailgun.netarranger.model.ConfigFile;
-import org.studiorailgun.netarranger.model.Data;
 import org.studiorailgun.netarranger.model.MessageType;
-import org.studiorailgun.netarranger.utils.Utilities;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.HashMap;
 
 public class Main {
     public static void main(String args[]){
@@ -44,6 +42,7 @@ public class Main {
             recursiveDeletePath(config.getOutputPath());
             
             //write source files out
+            writeCircularByteBuffer(config);
             writeByteStreamUtils(config);
             writeTypeBytesClass(config);
             writeNetworkParserClass(config);
@@ -97,6 +96,21 @@ public class Main {
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
+        }
+    }
+
+    //write out CircularByteBuffer.java
+    static void writeCircularByteBuffer(ConfigFile config){
+        String fullOutputDirectory = config.getOutputPath() + "/net/raw/";
+        String fullOutputPath = fullOutputDirectory + "CircularByteBuffer.java";
+        
+        CircularByteBuffer sourceGenerator = new CircularByteBuffer(config);
+        
+        try {
+            Files.createDirectories(new File(fullOutputDirectory).toPath());
+            Files.write(new File(fullOutputPath).toPath(), sourceGenerator.generateClassSource().getBytes());
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
     

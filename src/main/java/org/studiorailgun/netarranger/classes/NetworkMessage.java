@@ -42,12 +42,12 @@ public class NetworkMessage extends SourceGenerator {
         
         for(Category cat : config.getCategories()){
             fullFile = fullFile + "                case TypeBytes.MESSAGE_TYPE_" + cat.getCategoryName().toUpperCase() + ":\n";
-            fullFile = fullFile + "                    secondByte = byteStream.get(1);\n";
+            fullFile = fullFile + "                    secondByte = byteBuffer.peek(1);\n";
             fullFile = fullFile + "                    switch(secondByte){\n";
             for(MessageType type : cat.getMessageTypes()){
                 fullFile = fullFile + "                    case TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + ":\n";
-                fullFile = fullFile + "                        if(" + cat.getCategoryName() + "Message.canParseMessage(byteStream,secondByte)){\n";
-                fullFile = fullFile + "                            rVal = " + cat.getCategoryName() + "Message.parse" + type.getMessageName() + "Message(byteStream);\n";
+                fullFile = fullFile + "                        if(" + cat.getCategoryName() + "Message.canParseMessage(byteBuffer,secondByte)){\n";
+                fullFile = fullFile + "                            rVal = " + cat.getCategoryName() + "Message.parse" + type.getMessageName() + "Message(byteBuffer);\n";
                 fullFile = fullFile + "                        }\n";
                 fullFile = fullFile + "                        break;\n";
             }

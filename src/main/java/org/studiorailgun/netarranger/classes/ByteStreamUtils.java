@@ -22,6 +22,9 @@ public class ByteStreamUtils extends SourceGenerator {
     public String generateClassSource() {
         //package header
         String fullFile = "package " + config.getPackageName() + ".util;\n\n";
+
+        //add import for circular byte buffer
+        fullFile = fullFile + "import " + config.getPackageName() + ".net.raw.CircularByteBuffer;\n\n";
         
         //content
         fullFile = fullFile + Utilities.readBakedResourceToString(Main.class.getResourceAsStream("/classTemplates/ByteStreamUtils.txt"));

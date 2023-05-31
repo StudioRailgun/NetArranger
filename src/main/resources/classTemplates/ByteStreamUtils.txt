@@ -105,6 +105,96 @@ public class ByteStreamUtils {
         bufferLock.release();
         return rVal;
     }
+
+    public static int popIntFromByteQueue(CircularByteBuffer byteBuffer){
+        int rVal = -1;
+        bufferLock.acquireUninterruptibly();
+        integerCompactor.clear();
+        integerCompactor.position(0);
+        integerCompactor.limit(4);
+        integerCompactor.put(0,byteBuffer.peek(0));
+        integerCompactor.put(1,byteBuffer.peek(1));
+        integerCompactor.put(2,byteBuffer.peek(2));
+        integerCompactor.put(3,byteBuffer.peek(3));
+        byteBuffer.read(4);
+        integerCompactor.position(0);
+        integerCompactor.limit(4);
+        rVal = integerCompactor.getInt();
+        bufferLock.release();
+        return rVal;
+    }
+    
+    public static float popFloatFromByteQueue(CircularByteBuffer byteBuffer){
+        float rVal = -1;
+        bufferLock.acquireUninterruptibly();
+        integerCompactor.clear();
+        integerCompactor.position(0);
+        integerCompactor.limit(4);
+        integerCompactor.put(0,byteBuffer.read(1));
+        integerCompactor.put(1,byteBuffer.read(1));
+        integerCompactor.put(2,byteBuffer.read(1));
+        integerCompactor.put(3,byteBuffer.read(1));
+        integerCompactor.position(0);
+        integerCompactor.limit(4);
+        rVal = integerCompactor.getFloat();
+        bufferLock.release();
+        return rVal;
+    }
+    
+    public static long popLongFromByteQueue(CircularByteBuffer byteBuffer){
+        long rVal = -1;
+        bufferLock.acquireUninterruptibly();
+        integerCompactor.clear();
+        integerCompactor.position(0);
+        integerCompactor.limit(8);
+        integerCompactor.put(0,byteBuffer.read(1));
+        integerCompactor.put(1,byteBuffer.read(1));
+        integerCompactor.put(2,byteBuffer.read(1));
+        integerCompactor.put(3,byteBuffer.read(1));
+        integerCompactor.put(4,byteBuffer.read(1));
+        integerCompactor.put(5,byteBuffer.read(1));
+        integerCompactor.put(6,byteBuffer.read(1));
+        integerCompactor.put(7,byteBuffer.read(1));
+        integerCompactor.position(0);
+        integerCompactor.limit(8);
+        rVal = integerCompactor.getLong();
+        bufferLock.release();
+        return rVal;
+    }
+    
+    public static String popStringFromByteQueue(CircularByteBuffer byteBuffer){
+        int length = popIntFromByteQueue(byteBuffer);
+        byte[] stringBytes = byteBuffer.read(length);
+        String rVal = new String(stringBytes);
+        return rVal;
+    }
+
+    public static byte[] popByteArrayFromByteQueue(CircularByteBuffer byteBuffer){
+        int length = popIntFromByteQueue(byteBuffer);
+        byte[] bytes = byteBuffer.read(length);
+        return bytes;
+    }
+
+    public static double popDoubleFromByteQueue(CircularByteBuffer byteBuffer){
+        double rVal = -1;
+        bufferLock.acquireUninterruptibly();
+        integerCompactor.clear();
+        integerCompactor.position(0);
+        integerCompactor.limit(8);
+        integerCompactor.put(0,byteBuffer.read(1));
+        integerCompactor.put(1,byteBuffer.read(1));
+        integerCompactor.put(2,byteBuffer.read(1));
+        integerCompactor.put(3,byteBuffer.read(1));
+        integerCompactor.put(4,byteBuffer.read(1));
+        integerCompactor.put(5,byteBuffer.read(1));
+        integerCompactor.put(6,byteBuffer.read(1));
+        integerCompactor.put(7,byteBuffer.read(1));
+        integerCompactor.position(0);
+        integerCompactor.limit(8);
+        rVal = integerCompactor.getDouble();
+        bufferLock.release();
+        return rVal;
+    }
     
     public static byte[] serializeIntToBytes(int i){
         byte[] rVal = new byte[4];
