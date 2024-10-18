@@ -52,7 +52,7 @@ public class TypeBytes extends SourceGenerator {
             fullFile = fullFile + "    */\n";
             for(MessageType type : cat.getMessageTypes()){
                 //get all data types
-                HashMap<String,String> typeMap = new HashMap();
+                HashMap<String,String> typeMap = new HashMap<String,String>();
                 for(Data variable : cat.getData()){
                     typeMap.put(variable.getName(), variable.getType());
                 }
@@ -82,7 +82,7 @@ public class TypeBytes extends SourceGenerator {
                     }
                 }
                 if(!variableSize){
-                    if(packetSize < 255){
+                    if(packetSize < 127){
                         fullFile = fullFile + "    public static final byte " + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + "_SIZE = " + packetSize + ";\n";
                     } else {
                         fullFile = fullFile + "    public static final short " + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + "_SIZE = " + packetSize + ";\n";

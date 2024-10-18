@@ -52,15 +52,11 @@ public class NetworkParser {
         }
     }
     
-    public void pushMessagesOut(){
+    public void pushMessagesOut() throws IOException {
         for(NetworkMessage message : outgoingMessageQueue){
             outgoingMessageQueue.remove(message);
-            try {
 //                System.out.println("Write message of type " + message.getType());
-                outgoingStream.write(message.getRawBytes());
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+            outgoingStream.write(message.getRawBytes());
         }
     }
     

@@ -1,8 +1,6 @@
 package org.studiorailgun.netarranger.classes;
 
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 
 import org.studiorailgun.netarranger.model.Category;
 import org.studiorailgun.netarranger.model.ConfigFile;
@@ -218,7 +216,7 @@ public class TypedMessage extends SourceGenerator {
         //parse and construct functions
         for(MessageType type : cat.getMessageTypes()){
             //get all data types
-            HashMap<String,String> typeMap = new HashMap();
+            HashMap<String,String> typeMap = new HashMap<String,String>();
             for(Data variable : cat.getData()){
                 typeMap.put(variable.getName(), variable.getType());
             }
@@ -277,7 +275,7 @@ public class TypedMessage extends SourceGenerator {
         fullFile = fullFile + "        switch(this.messageType){\n";
         for(MessageType type : cat.getMessageTypes()){
             //get all data types
-            HashMap<String,String> typeMap = new HashMap();
+            HashMap<String,String> typeMap = new HashMap<String,String>();
             for(Data variable : cat.getData()){
                 typeMap.put(variable.getName(), variable.getType());
             }
@@ -435,7 +433,7 @@ public class TypedMessage extends SourceGenerator {
         String rVal = "";
         rVal = rVal + "    public static boolean canParse" + type.getMessageName() + "Message(CircularByteBuffer byteBuffer){\n";
         rVal = rVal + "        int currentStreamLength = byteBuffer.getRemaining();\n";
-        rVal = rVal + "        List<Byte> temporaryByteQueue = new LinkedList();\n";
+        rVal = rVal + "        List<Byte> temporaryByteQueue = new LinkedList<Byte>();\n";
         int currentLength = 2;
         //Need to keep track of the variables that themselves have variable length
         //so we can check them when accounting for packet length
