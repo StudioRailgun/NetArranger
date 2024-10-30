@@ -16,6 +16,11 @@ public class Data {
     String type;
 
     /**
+     * An optional description of this variable
+     */
+    String description;
+
+    /**
      * Gets the name of the variable
      * @return The name of the variable
      */
@@ -29,6 +34,14 @@ public class Data {
      */
     public String getType() {
         return type;
+    }
+
+    /**
+     * Gets the description of this variable
+     * @return The description
+     */
+    public String getDescription(){
+        return description;
     }
     
     

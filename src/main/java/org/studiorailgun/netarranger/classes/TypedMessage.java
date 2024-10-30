@@ -113,10 +113,20 @@ public class TypedMessage extends SourceGenerator {
             fullFile = fullFile + "import java.util.List;\n\n";
         }
         
+        //add description comment if defined
+        if(cat.getDescription() != null){
+            fullFile = fullFile + "/**\n";
+            fullFile = fullFile + " * " + cat.getDescription() + "\n";
+            fullFile = fullFile + " */\n";
+        }
+
         //class name
         fullFile = fullFile + "public class " + cat.getCategoryName() + "Message extends NetworkMessage {\n\n";
         
         //message type enum
+        fullFile = fullFile + "    /**\n";
+        fullFile = fullFile + "     * The types of messages available in this category.\n";
+        fullFile = fullFile + "     */\n";
         fullFile = fullFile + "    public enum " + cat.getCategoryName() + "MessageType {\n";
         for(MessageType type : cat.getMessageTypes()){
             fullFile = fullFile + "        " + type.getMessageName().toUpperCase() + ",\n";
@@ -124,8 +134,16 @@ public class TypedMessage extends SourceGenerator {
         fullFile = fullFile + "    }\n\n";
         
         //variables
+        fullFile = fullFile + "    /**\n";
+        fullFile = fullFile + "     * The type of this message in particular.\n";
+        fullFile = fullFile + "     */\n";
         fullFile = fullFile + "    " + cat.getCategoryName() + "MessageType messageType;\n";
         for(Data variable : cat.getData()){
+            if(variable.getDescription() != null){
+                fullFile = fullFile + "    /**\n";
+                fullFile = fullFile + "     * " + variable.getDescription() + "\n";
+                fullFile = fullFile + "     */\n";
+            }
             switch(variable.getType()){
                 case "FIXED_INT":
                     fullFile = fullFile + "    int " + variable.getName() + ";\n";
@@ -150,6 +168,10 @@ public class TypedMessage extends SourceGenerator {
         fullFile = fullFile + "\n";
         
         //constructor
+        fullFile = fullFile + "    /**\n";
+        fullFile = fullFile + "     * Constructor\n";
+        fullFile = fullFile + "     * @param messageType The type of this message\n";
+        fullFile = fullFile + "     */\n";
         fullFile = fullFile + "    " + cat.getCategoryName() + "Message(" + cat.getCategoryName() + "MessageType messageType){\n";
         fullFile = fullFile + "        this.type = MessageType." + cat.getCategoryName().toUpperCase() + "_MESSAGE;\n";
         fullFile = fullFile + "        this.messageType = messageType;\n";
@@ -165,60 +187,72 @@ public class TypedMessage extends SourceGenerator {
             switch(variable.getType()){
                 case "FIXED_INT":
                     //getter
+                    fullFile = this.addGetterComment(fullFile,variable);
                     fullFile = fullFile + "    public int get" + variable.getName() + "() {\n";
                     fullFile = fullFile + "        return " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
                     //setter
+                    fullFile = this.addSetterComment(fullFile,variable);
                     fullFile = fullFile + "    public void set" + variable.getName() + "(int " + variable.getName() + ") {\n";
                     fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
                     break;
                 case "FIXED_FLOAT":
                     //getter
+                    fullFile = this.addGetterComment(fullFile,variable);
                     fullFile = fullFile + "    public float get" + variable.getName() + "() {\n";
                     fullFile = fullFile + "        return " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
                     //setter
+                    fullFile = this.addSetterComment(fullFile,variable);
                     fullFile = fullFile + "    public void set" + variable.getName() + "(float " + variable.getName() + ") {\n";
                     fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
                     break;
                 case "FIXED_LONG":
                     //getter
+                    fullFile = this.addGetterComment(fullFile,variable);
                     fullFile = fullFile + "    public long get" + variable.getName() + "() {\n";
                     fullFile = fullFile + "        return " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
                     //setter
+                    fullFile = this.addSetterComment(fullFile,variable);
                     fullFile = fullFile + "    public void set" + variable.getName() + "(long " + variable.getName() + ") {\n";
                     fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
                     break;
                 case "VAR_STRING":
                     //getter
+                    fullFile = this.addGetterComment(fullFile,variable);
                     fullFile = fullFile + "    public String get" + variable.getName() + "() {\n";
                     fullFile = fullFile + "        return " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
                     //setter
+                    fullFile = this.addSetterComment(fullFile,variable);
                     fullFile = fullFile + "    public void set" + variable.getName() + "(String " + variable.getName() + ") {\n";
                     fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
                     break;
                 case "BYTE_ARRAY":
                     //getter
+                    fullFile = this.addGetterComment(fullFile,variable);
                     fullFile = fullFile + "    public byte[] get" + variable.getName() + "() {\n";
                     fullFile = fullFile + "        return " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
                     //setter
+                    fullFile = this.addSetterComment(fullFile,variable);
                     fullFile = fullFile + "    public void set" + variable.getName() + "(byte[] " + variable.getName() + ") {\n";
                     fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
                     break;
                 case "FIXED_DOUBLE":
                     //getter
+                    fullFile = this.addGetterComment(fullFile,variable);
                     fullFile = fullFile + "    public double get" + variable.getName() + "() {\n";
                     fullFile = fullFile + "        return " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
                     //setter
+                    fullFile = this.addSetterComment(fullFile,variable);
                     fullFile = fullFile + "    public void set" + variable.getName() + "(double " + variable.getName() + ") {\n";
                     fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
@@ -227,11 +261,21 @@ public class TypedMessage extends SourceGenerator {
         }
         
         //strip packet header
+        fullFile = fullFile + "    /**\n";
+        fullFile = fullFile + "     * Removes the packet header from the buffer\n";
+        fullFile = fullFile + "     * @param byteBuffer The buffer\n";
+        fullFile = fullFile + "     */\n";
         fullFile = fullFile + "    static void stripPacketHeader(CircularByteBuffer byteBuffer){\n";
         fullFile = fullFile + "        byteBuffer.read(2);\n";
         fullFile = fullFile + "    }\n\n";
         
         //parse check function
+        fullFile = fullFile + "    /**\n";
+        fullFile = fullFile + "     * Checks if this message can be parsed (ie are all bytes present)\n";
+        fullFile = fullFile + "     * @param byteBuffer The buffer\n";
+        fullFile = fullFile + "     * @param secondByte The second byte, signifying the subtype of the message\n";
+        fullFile = fullFile + "     * @return true if the message can be parsed, false otherwise\n";
+        fullFile = fullFile + "     */\n";
         fullFile = fullFile + "    public static boolean canParseMessage(CircularByteBuffer byteBuffer, byte secondByte){\n";
         fullFile = fullFile + "        switch(secondByte){\n";
         for(MessageType type : cat.getMessageTypes()){
@@ -261,6 +305,9 @@ public class TypedMessage extends SourceGenerator {
             }
             
             //construct function
+            fullFile = fullFile + "    /**\n";
+            fullFile = fullFile + "     * Constructs a message of type " + type.getMessageName() + "\n";
+            fullFile = fullFile + "     */\n";
             fullFile = fullFile + "    public static " + cat.getCategoryName() + "Message construct" + type.getMessageName() + "Message(";
             for(String data : type.getData()){
                 switch(typeMap.get(data)){
@@ -415,6 +462,12 @@ public class TypedMessage extends SourceGenerator {
         return fullFile;
     }
     
+    /**
+     * Gets the fixed size variable parse check conditional logic
+     * @param cat The category of the message
+     * @param type The type of the message
+     * @return The conditional logic as a string
+     */
     static String getFixedSizeParseCheck(Category cat, MessageType type){
         String rVal = "";
         rVal = rVal + "            case TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + ":\n";
@@ -426,6 +479,12 @@ public class TypedMessage extends SourceGenerator {
         return rVal;
     }
     
+    /**
+     * Gets the conditional logic for checking variable size in the parse checker method
+     * @param cat The category othe message
+     * @param type The type of the message
+     * @return The conditional logic as a string
+     */
     static String getVariableSizeParseCheck(Category cat, MessageType type){
         String rVal = "";
         rVal = rVal + "            case TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + ":\n";
@@ -433,8 +492,18 @@ public class TypedMessage extends SourceGenerator {
         return rVal;
     }
     
+    /**
+     * Gets the body for the method to parse a given type of message
+     * @param cat The category of the message
+     * @param type The type of the message
+     * @param typeMap The type map for the variables
+     * @return The method body as a string
+     */
     static String getParseFunction(Category cat, MessageType type, HashMap<String,String> typeMap){
         String rVal = "";
+        rVal = rVal + "    /**\n";
+        rVal = rVal + "     * Parses a message of type " + type.getMessageName() + "\n";
+        rVal = rVal + "     */\n";
         rVal = rVal + "    public static " + cat.getCategoryName() + "Message parse" + type.getMessageName() + "Message(CircularByteBuffer byteBuffer){\n";
         rVal = rVal + "        " + cat.getCategoryName() + "Message rVal = new " + cat.getCategoryName() + "Message(" + cat.getCategoryName() + "MessageType." + type.getMessageName().toUpperCase() + ");\n";
         rVal = rVal + "        stripPacketHeader(byteBuffer);\n";
@@ -465,8 +534,18 @@ public class TypedMessage extends SourceGenerator {
         return rVal;
     }
     
+    /**
+     * Gets the function to check if a message type can be parsed from the bytestream
+     * @param cat The category of the message
+     * @param type The message type itself
+     * @param typeMap The types of all variables in the message
+     * @return The body of the function as a string
+     */
     static String getParseCheckTypeFunction(Category cat, MessageType type, HashMap<String,String> typeMap){
         String rVal = "";
+        rVal = rVal + "    /**\n";
+        rVal = rVal + "     * Checks if a message of type " + type.getMessageName() + " can be parsed from the byte stream\n";
+        rVal = rVal + "     */\n";
         rVal = rVal + "    public static boolean canParse" + type.getMessageName() + "Message(CircularByteBuffer byteBuffer){\n";
         rVal = rVal + "        int currentStreamLength = byteBuffer.getRemaining();\n";
         rVal = rVal + "        List<Byte> temporaryByteQueue = new LinkedList<Byte>();\n";
@@ -575,6 +654,42 @@ public class TypedMessage extends SourceGenerator {
         rVal = rVal + "        return true;\n";
         rVal = rVal + "    }\n\n";
         return rVal;
+    }
+
+    /**
+     * Adds the getter comment to the string
+     * @param fullFile The full file string
+     * @param variable The variable
+     * @return The getter comment
+     */
+    private String addGetterComment(String fullFile, Data variable){
+        fullFile = fullFile + "    /**\n";
+        fullFile = fullFile + "     * Gets " + variable.getName();
+        if(variable.getDescription() != null){
+            fullFile = fullFile + " - " + variable.getDescription() + "\n";
+        } else {
+            fullFile = fullFile + "\n";
+        }
+        fullFile = fullFile + "     */\n";
+        return fullFile;
+    }
+
+    /**
+     * Adds the setter comment to the string
+     * @param fullFile The full file string
+     * @param variable The variable
+     * @return The setter comment
+     */
+    private String addSetterComment(String fullFile, Data variable){
+        fullFile = fullFile + "    /**\n";
+        fullFile = fullFile + "     * Sets " + variable.getName();
+        if(variable.getDescription() != null){
+            fullFile = fullFile + " - " + variable.getDescription() + "\n";
+        } else {
+            fullFile = fullFile + "\n";
+        }
+        fullFile = fullFile + "     */\n";
+        return fullFile;
     }
     
 }

@@ -13,6 +13,11 @@ public class Category {
     String categoryName;
 
     /**
+     * An optional description of the category
+     */
+    String description;
+
+    /**
      * The types of messages contained in this category
      */
     List<MessageType> messageTypes;
@@ -44,6 +49,14 @@ public class Category {
      */
     public List<Data> getData() {
         return data;
+    }
+
+    /**
+     * Gets the description of the category
+     * @return The description
+     */
+    public String getDescription(){
+        return description;
     }
     
     

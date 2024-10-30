@@ -1,11 +1,12 @@
 {
-    "outputPath" : "./test",
-    "packageName" : "org.studiorailgun.mypackage.net.parser",
+    "outputPath" : "./src/main/java/io/github/studiorailgun/mypackage/net/parser",
+    "packageName" : "io.github.studiorailgun.mypackage.net.parser",
     "categories":[
 
 
         {
             "categoryName" : "World",
+            "description": "Messages that commuicate world state",
             "data" : [
                 {
                     "name" : "worldName",
@@ -27,6 +28,7 @@
             "messageTypes" : [
                 {
                     "messageName" : "Info",
+                    "description": "Sends info about the world",
                     "data" : [
                         "worldName",
                         "worldSize"
@@ -34,6 +36,7 @@
                 },
                 {
                     "messageName" : "Update",
+                    "description": "Updates info about the world",
                     "data" : [
                         "locationX",
                         "locationY"
