@@ -1,2 +1,4 @@
-
+/**
+ * The constants used in serializing/deserializing messages
+ */
 public class TypeBytes {

@@ -6,17 +6,20 @@ import org.studiorailgun.netarranger.model.ConfigFile;
 import org.studiorailgun.netarranger.model.MessageType;
 import org.studiorailgun.netarranger.utils.Utilities;
 
-/*
-
-This is a generic message type that is used in parsing specific message types
-
-*/
-
+/**
+ * This is a generic message type that is used in parsing specific message types
+ */
 public class NetworkMessage extends SourceGenerator {
 
-    
+    /**
+     * Config file
+     */
     ConfigFile config;
     
+    /**
+     * Constructor
+     * @param config The config file
+     */
     public NetworkMessage(ConfigFile config){
         this.config = config;
     }
@@ -26,15 +29,12 @@ public class NetworkMessage extends SourceGenerator {
         //package header
         String fullFile = "package " + config.getPackageName() + ".net.message;\n\n";
         
-        //attach ByteUtils
-        fullFile = fullFile + "import " + config.getPackageName() + ".util.ByteStreamUtils;\n";
-        
         //intro of file
         fullFile = fullFile + Utilities.readBakedResourceToString(Main.class.getResourceAsStream("/classTemplates/NetworkMessageFirstPart.txt"));
         
         //construct enum
         for(Category cat : config.getCategories()){
-            fullFile = fullFile + cat.getCategoryName().toUpperCase() + "_MESSAGE,\n";
+            fullFile = fullFile + "        " + cat.getCategoryName().toUpperCase() + "_MESSAGE,\n";
         }
         
         //second part of file

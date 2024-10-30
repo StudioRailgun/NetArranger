@@ -1,17 +1,41 @@
     }
     
+    /**
+     * The type of this message
+     */
     MessageType type;
-    boolean serialized; // has this message been converted to bytes?
+
+    /**
+     * Tracks whether the message has been serialized to bytes or not
+     */
+    boolean serialized;
+
+    /**
+     * The raw bytes contained in the message
+     */
     byte[] rawBytes;
 
+    /**
+     * Gets the type of the message
+     * @return The type of the message
+     */
     public MessageType getType() {
         return type;
     }
 
+    /**
+     * Gets the raw bytes of the message
+     * @return The raw bytes
+     */
     public byte[] getRawBytes() {
         return rawBytes;
     }
     
+    /**
+     * Parses the byte stream for the next message
+     * @param byteBuffer The byte buffer
+     * @return The message if one is at the front of the byte stream, null otherwise
+     */
     public static NetworkMessage parseBytestreamForMessage(CircularByteBuffer byteBuffer){
         NetworkMessage rVal = null;
         byte firstByte;

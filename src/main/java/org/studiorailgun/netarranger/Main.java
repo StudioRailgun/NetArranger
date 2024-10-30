@@ -3,7 +3,6 @@ package org.studiorailgun.netarranger;
 import com.google.gson.Gson;
 
 import org.studiorailgun.netarranger.classes.ByteStreamUtils;
-import org.studiorailgun.netarranger.classes.CircularByteBuffer;
 import org.studiorailgun.netarranger.classes.NetworkMessage;
 import org.studiorailgun.netarranger.classes.NetworkParser;
 import org.studiorailgun.netarranger.classes.TypeBytes;
@@ -16,7 +15,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+/**
+ * Main class
+ */
 public class Main {
+
+    /**
+     * Main method
+     */
     public static void main(String args[]){
         //read in the config file
         File f = new File("./template.json");
@@ -42,7 +48,6 @@ public class Main {
             recursiveDeletePath(config.getOutputPath());
             
             //write source files out
-            writeCircularByteBuffer(config);
             writeByteStreamUtils(config);
             writeTypeBytesClass(config);
             writeNetworkParserClass(config);
@@ -55,7 +60,11 @@ public class Main {
         }
     }
 
-    //recursively parse config files
+    /**
+     * Recursively parse config files
+     * @param topLevelConfig The top level config file
+     * @param currentPath The current path
+     */
     static void recursivelyParseConfigFiles(ConfigFile topLevelConfig, String currentPath){
         File f = new File(currentPath);
         Gson gson = new Gson();
@@ -78,7 +87,10 @@ public class Main {
         }
     }
     
-    //recursively deletes directories and their contents
+    /**
+     * Recursively deletes directories and their contents at a given path
+     * @param path The path
+     */
     static void recursiveDeletePath(String path){
         File f = new File(path);
         if(f.isDirectory()){
@@ -98,23 +110,11 @@ public class Main {
             }
         }
     }
-
-    //write out CircularByteBuffer.java
-    static void writeCircularByteBuffer(ConfigFile config){
-        String fullOutputDirectory = config.getOutputPath() + "/net/raw/";
-        String fullOutputPath = fullOutputDirectory + "CircularByteBuffer.java";
-        
-        CircularByteBuffer sourceGenerator = new CircularByteBuffer(config);
-        
-        try {
-            Files.createDirectories(new File(fullOutputDirectory).toPath());
-            Files.write(new File(fullOutputPath).toPath(), sourceGenerator.generateClassSource().getBytes());
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
     
-    //write out ByteStreamUtils.java
+    /**
+     * Writes the ByteStreamUtils.java file
+     * @param config The config for the current run
+     */
     static void writeByteStreamUtils(ConfigFile config){
         String fullOutputDirectory = config.getOutputPath() + "/util/";
         String fullOutputPath = fullOutputDirectory + "ByteStreamUtils.java";
@@ -129,7 +129,10 @@ public class Main {
         }
     }
     
-    //write out TypeBytes.java
+    /**
+     * Writes the TypeBytes.java file
+     * @param config The config for the current run
+     */
     static void writeTypeBytesClass(ConfigFile config){
         String fullOutputDirectory = config.getOutputPath() + "/net/message/";
         String fullOutputPath = fullOutputDirectory + "TypeBytes.java";
@@ -144,7 +147,10 @@ public class Main {
         }
     }
     
-    //write out NetworkParser.java
+    /**
+     * Writes the NetworkParser.java file
+     * @param config The config for the current run
+     */
     static void writeNetworkParserClass(ConfigFile config){
         String fullOutputDirectory = config.getOutputPath() + "/net/raw/";
         String fullOutputPath = fullOutputDirectory + "NetworkParser.java";
@@ -159,7 +165,10 @@ public class Main {
         }
     }
     
-    //write out NetworkMessage.java
+    /**
+     * Writes the NetworkMessage.java file
+     * @param config The config for the current run
+     */
     static void writeNetworkMessageClass(ConfigFile config){
         String fullOutputDirectory = config.getOutputPath() + "/net/message/";
         String fullOutputPath = fullOutputDirectory + "NetworkMessage.java";
@@ -174,7 +183,10 @@ public class Main {
         }
     }
     
-    //write out <Category>Message.java
+    /**
+     * Writes the <Category>Message.java file
+     * @param config The config for the current run
+     */
     static void createMessageClassForCategory(ConfigFile config, Category cat){
         String fullOutputDirectory = config.getOutputPath() + "/net/message/";
         String fullOutputPath = fullOutputDirectory + "" + cat.getCategoryName() + "Message.java";

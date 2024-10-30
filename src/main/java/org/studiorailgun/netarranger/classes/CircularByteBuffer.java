@@ -10,8 +10,15 @@ import org.studiorailgun.netarranger.utils.Utilities;
  */
 public class CircularByteBuffer extends SourceGenerator {
 
+    /**
+     * The config file
+     */
     ConfigFile config;
     
+    /**
+     * Constructor
+     * @param config The config file
+     */
     public CircularByteBuffer(ConfigFile config){
         this.config = config;
     }

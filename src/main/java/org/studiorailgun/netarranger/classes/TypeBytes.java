@@ -9,12 +9,9 @@ import org.studiorailgun.netarranger.model.Data;
 import org.studiorailgun.netarranger.model.MessageType;
 import org.studiorailgun.netarranger.utils.Utilities;
 
-/*
-
-This contains constants that the other classes use to distinguish different message types/sizes
-
-*/
-
+/**
+ * This contains constants that the other classes use to distinguish different message types/sizes
+ */
 public class TypeBytes extends SourceGenerator {
     
     ConfigFile config;
@@ -32,7 +29,7 @@ public class TypeBytes extends SourceGenerator {
         fullFile = fullFile + Utilities.readBakedResourceToString(Main.class.getResourceAsStream("/classTemplates/TypeBytesFirstPart.txt"));
         
         //add type bytes for categories
-        fullFile = fullFile + "/*\nMessage categories\n*/\n";
+        fullFile = fullFile + "    /**\n     * Message categories\n     */\n";
         int incrementer = 0;
         for(Category cat : config.getCategories()){
             fullFile = fullFile + "    public static final byte MESSAGE_TYPE_" + cat.getCategoryName().toUpperCase() + " = " + incrementer + ";\n";
@@ -40,7 +37,7 @@ public class TypeBytes extends SourceGenerator {
         }
         for(Category cat : config.getCategories()){
             fullFile = fullFile + "    /*\n";
-            fullFile = fullFile + "    " + cat.getCategoryName() + " subcategories\n";
+            fullFile = fullFile + "     " + cat.getCategoryName() + " subcategories\n";
             fullFile = fullFile + "    */\n";
             incrementer = 0;
             for(MessageType type : cat.getMessageTypes()){
@@ -48,7 +45,7 @@ public class TypeBytes extends SourceGenerator {
                 incrementer++;
             }
             fullFile = fullFile + "    /*\n";
-            fullFile = fullFile + "    " + cat.getCategoryName() + " packet sizes\n";
+            fullFile = fullFile + "     " + cat.getCategoryName() + " packet sizes\n";
             fullFile = fullFile + "    */\n";
             for(MessageType type : cat.getMessageTypes()){
                 //get all data types
@@ -89,6 +86,7 @@ public class TypeBytes extends SourceGenerator {
                     }
                 }
             }
+            fullFile = fullFile + "\n";
         }
         
         //outro of file

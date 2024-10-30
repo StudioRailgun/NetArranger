@@ -10,10 +10,26 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Utilities used by the tool
+ */
 public class Utilities {
     
+    /**
+     * Number of attempts to read before failing the function
+     */
     static final int maxReadFails = 3;
+
+    /**
+     * The time to wait after a read failure
+     */
     static final int READ_TIMEOUT_DURATION = 5;
+
+    /**
+     * Reads an input stream as a string
+     * @param resourceInputStream The input stream
+     * @return The string
+     */
     public static String readBakedResourceToString(InputStream resourceInputStream){
         String rVal = "";
         BufferedReader reader;
@@ -52,7 +68,13 @@ public class Utilities {
     }
     
     
-    
+    /**
+     * Loads an object from a file baked into the jar
+     * @param <T> The type of the object
+     * @param fileName The name of the file
+     * @param className The classname of the object
+     * @return The object
+     */
     public static <T>T loadObjectFromBakedJsonFile(String fileName, Class<T> className){
         T rVal = null;
         String rawJSON = Utilities.readBakedResourceToString(Main.class.getResourceAsStream(fileName));

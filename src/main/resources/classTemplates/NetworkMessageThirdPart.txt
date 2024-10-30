@@ -3,10 +3,17 @@
         return rVal;
     }
     
+    /**
+     * Checks if this message is serialized or not
+     * @return true if it is serialized, false otherwise
+     */
     public boolean isSerialized(){
         return serialized;
     }
     
+    /**
+     * Serializes the message
+     */
     abstract void serialize();
     
 }

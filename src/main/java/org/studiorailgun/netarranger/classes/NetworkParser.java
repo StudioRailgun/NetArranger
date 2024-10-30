@@ -4,16 +4,20 @@ import org.studiorailgun.netarranger.Main;
 import org.studiorailgun.netarranger.model.ConfigFile;
 import org.studiorailgun.netarranger.utils.Utilities;
 
-/*
-
-This handles the conversion of socket bytes to a LinkedList of Bytes
-
-*/
-
+/**
+ * This handles the conversion of socket bytes to a LinkedList of Bytes
+ */
 public class NetworkParser extends SourceGenerator {
 
+    /**
+     * Config file
+     */
     ConfigFile config;
     
+    /**
+     * Constructor
+     * @param config The config file
+     */
     public NetworkParser(ConfigFile config){
         this.config = config;
     }

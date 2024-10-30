@@ -1,41 +1,81 @@
+import io.github.studiorailgun.CircularByteBuffer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * The main message parser. This is used to serialize/deserialize messages to/from the provided streams.
+ */
 public class NetworkParser {
+
+    /**
+     * The size of the read buffer
+     */
+    static final int READ_BLOCK_SIZE = 16 * 1024 * 1024;
+
+    /**
+     * The size of the circular buffer
+     */
+    static final int CIRCULAR_BUFFER_SIZE = 64 * 1024 * 1024;
     
+    /**
+     * The input stream for the parser
+     */
     InputStream incomingStream;
+
+    /**
+     * The output stream for the parser
+     */
     OutputStream outgoingStream;
     
+    /**
+     * The queue of incoming messages that have been parsed
+     */
     CopyOnWriteArrayList<NetworkMessage> incomingMessageQueue = new CopyOnWriteArrayList<NetworkMessage>();
+
+    /**
+     * The queue of outgoing messages that have yet to be sent
+     */
     CopyOnWriteArrayList<NetworkMessage> outgoingMessageQueue = new CopyOnWriteArrayList<NetworkMessage>();
     
-    CircularByteBuffer incomingByteBuffer = new CircularByteBuffer(64 * 1024 * 124);
+    /**
+     * The byte buffer for storing incoming bytes
+     */
+    CircularByteBuffer incomingByteBuffer = new CircularByteBuffer(CIRCULAR_BUFFER_SIZE);
+
+    /**
+     * The block array used to read blocks of bytes in
+     */
+    byte[] readBuffer = new byte[READ_BLOCK_SIZE];
+
+    /**
+     * The outgoing byte buffer
+     */
     CopyOnWriteArrayList<Byte> outgoingByteQueue = new CopyOnWriteArrayList<Byte>();
     
     
-    
+    /**
+     * Constructor
+     * @param incomingStream The stream of incoming bytes
+     * @param outgoingStream The stream of outgoing bytes
+     */
     public NetworkParser(InputStream incomingStream, OutputStream outgoingStream){
         this.incomingStream = incomingStream;
         this.outgoingStream = outgoingStream;
     }
-    
-    public void start(){
-        
-    }
-    
-    static final int READ_BUFFER_SIZE = 64 * 1024 * 1024;
-    byte[] readBuffer = new byte[READ_BUFFER_SIZE];
+
+    /**
+     * Reads messages from the input stream
+     */
     public void readMessagesIn(){
         try {
             //read in bytes
             int bytesRead = 0;
-            byte currentByte = -1;
             while(incomingStream.available() > 0){
                 // nextValue = incomingStream.read();
-                bytesRead = incomingStream.read(readBuffer, 0, READ_BUFFER_SIZE);
+                bytesRead = incomingStream.read(readBuffer, 0, READ_BLOCK_SIZE);
                 if(bytesRead > 0){
                     incomingByteBuffer.add(readBuffer, bytesRead);
                 }
@@ -52,22 +92,37 @@ public class NetworkParser {
         }
     }
     
+    /**
+     * Pushes messages out across the output stream
+     * @throws IOException Thrown if a message fails to serialize or the output stream fails to write
+     */
     public void pushMessagesOut() throws IOException {
         for(NetworkMessage message : outgoingMessageQueue){
             outgoingMessageQueue.remove(message);
-//                System.out.println("Write message of type " + message.getType());
             outgoingStream.write(message.getRawBytes());
         }
     }
     
+    /**
+     * Checks if there is a fully parsed incoming message in the queue
+     * @return true if there is message in the queue, false otherwise
+     */
     public boolean hasIncomingMessaage(){
         return incomingMessageQueue.size() > 0;
     }
     
+    /**
+     * Pops a fully parsed incoming message from the queue
+     * @return The message
+     */
     public NetworkMessage popIncomingMessage(){
         return incomingMessageQueue.remove(0);
     }
     
+    /**
+     * Adds a message to the outgoing queue
+     * @param message The message
+     */
     public void addOutgoingMessage(NetworkMessage message){
         outgoingMessageQueue.add(message);
     }

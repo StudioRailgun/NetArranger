@@ -7,27 +7,40 @@ import org.studiorailgun.netarranger.model.ConfigFile;
 import org.studiorailgun.netarranger.model.Data;
 import org.studiorailgun.netarranger.model.MessageType;
 
-/*
-
-Represents a specific category of message that we will be parsing for
-
-A very dense class, it contains:
-
-variables representing the contents of the category
-getters and setters for the above
-an enum for different message subtypes
-a checker function for whether a given byte stream can parse an instance of this class
-functions for parsing specific message subtypes from a byte stream
-functions for instantiation instances of this class, serialized, with specific message subtypes
-a serialization function to take an instantiation of this into a series of bytes
-
+/**
+ * <p>
+ * Represents a specific category of message that we will be parsing for
+ * </p>
+ * <p>
+ * A very dense class, it contains:
+ * </p>
+ * <ul>
+ * <li> Variables representing the contents of the category </li>
+ * <li> Getters and setters for the above </li>
+ * <li> An enum for different message subtypes </li>
+ * <li> A checker function for whether a given byte stream can parse an instance of this class </li>
+ * <li> Functions for parsing specific message subtypes from a byte stream </li>
+ * <li> Functions for instantiation instances of this class, serialized, with specific message subtypes </li>
+ * <li> A serialization function to take an instantiation of this into a series of bytes </li>
+ * </ul>
 */
-
 public class TypedMessage extends SourceGenerator {
     
+    /**
+     * The config file
+     */
     ConfigFile config;
+
+    /**
+     * The category containing this message
+     */
     Category cat;
     
+    /**
+     * Constructor
+     * @param config The config file
+     * @param cat The category this message is within
+     */
     public TypedMessage(ConfigFile config, Category cat){
         this.config = config;
         this.cat = cat;
@@ -77,7 +90,7 @@ public class TypedMessage extends SourceGenerator {
         //imports
         //attach ByteUtils
         fullFile = fullFile + "import " + config.getPackageName() + ".util.ByteStreamUtils;\n";
-        fullFile = fullFile + "import " + config.getPackageName() + ".net.raw.CircularByteBuffer;\n";
+        fullFile = fullFile + "import io.github.studiorailgun.CircularByteBuffer;\n";
         fullFile = fullFile + "import java.util.LinkedList;\n";
         fullFile = fullFile + "import java.util.List;\n\n";
         

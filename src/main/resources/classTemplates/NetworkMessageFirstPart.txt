@@ -1,7 +1,11 @@
-import electrosphere.net.parser.net.raw.CircularByteBuffer;
+import io.github.studiorailgun.CircularByteBuffer;
 
-import java.util.List;
-
+/**
+ * A network message
+ */
 public abstract class NetworkMessage {
     
+    /**
+     * The different categories of network messages
+     */
     public enum MessageType {
