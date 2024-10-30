@@ -48,28 +48,44 @@ public class TypedMessage extends SourceGenerator {
 
     @Override
     public String generateClassSource() {
+        boolean usesLists = false;
+        boolean usesByteUtils = false;
+        boolean hasStringData = false;
+        boolean hasFixedData = false;
         //construct map of whether data is fixed size
         HashMap<String,Boolean> fixedSizeVariableMap = new HashMap<String,Boolean>();
         for(Data data : cat.getData()){
             switch(data.getType()){
-                case "FIXED_INT":
+                case "FIXED_INT": {
                     fixedSizeVariableMap.put(data.getName(), true);
-                    break;
-                case "FIXED_FLOAT":
+                    usesByteUtils = true;
+                    hasFixedData = true;
+                } break;
+                case "FIXED_FLOAT": {
                     fixedSizeVariableMap.put(data.getName(), true);
-                    break;
-                case "FIXED_LONG":
+                    usesLists = true;
+                    hasFixedData = true;
+                } break;
+                case "FIXED_LONG": {
                     fixedSizeVariableMap.put(data.getName(), true);
-                    break;
-                case "VAR_STRING":
+                    usesLists = true;
+                    hasFixedData = true;
+                } break;
+                case "VAR_STRING": {
                     fixedSizeVariableMap.put(data.getName(), false);
-                    break;
-                case "FIXED_DOUBLE":
+                    usesLists = true;
+                    usesByteUtils = true;
+                    hasStringData = true;
+                } break;
+                case "FIXED_DOUBLE": {
                     fixedSizeVariableMap.put(data.getName(), true);
-                    break;
-                case "BYTE_ARRAY":
+                    usesLists = true;
+                    hasFixedData = true;
+                } break;
+                case "BYTE_ARRAY": {
                     fixedSizeVariableMap.put(data.getName(), false);
-                    break;
+                    usesByteUtils = true;
+                } break;
             }
         }
         //construct map of whether the message type is variable size or not
@@ -88,11 +104,14 @@ public class TypedMessage extends SourceGenerator {
         String fullFile = "package " + config.getPackageName() + ".net.message;\n\n";
         
         //imports
-        //attach ByteUtils
-        fullFile = fullFile + "import " + config.getPackageName() + ".util.ByteStreamUtils;\n";
         fullFile = fullFile + "import io.github.studiorailgun.CircularByteBuffer;\n";
-        fullFile = fullFile + "import java.util.LinkedList;\n";
-        fullFile = fullFile + "import java.util.List;\n\n";
+        if(usesByteUtils){
+            fullFile = fullFile + "import " + config.getPackageName() + ".util.ByteStreamUtils;\n";
+        }
+        if(usesLists){
+            fullFile = fullFile + "import java.util.LinkedList;\n";
+            fullFile = fullFile + "import java.util.List;\n\n";
+        }
         
         //class name
         fullFile = fullFile + "public class " + cat.getCategoryName() + "Message extends NetworkMessage {\n\n";
@@ -283,8 +302,12 @@ public class TypedMessage extends SourceGenerator {
         //serialize function
         fullFile = fullFile + "    @Override\n";
         fullFile = fullFile + "    void serialize(){\n";
-        fullFile = fullFile + "        byte[] intValues = new byte[8];\n";
-        fullFile = fullFile + "        byte[] stringBytes;\n";
+        if(hasFixedData || hasStringData){
+            fullFile = fullFile + "        byte[] intValues = new byte[8];\n";
+        }
+        if(hasStringData){
+            fullFile = fullFile + "        byte[] stringBytes;\n";
+        }
         fullFile = fullFile + "        switch(this.messageType){\n";
         for(MessageType type : cat.getMessageTypes()){
             //get all data types
