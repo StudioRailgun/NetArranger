@@ -54,6 +54,11 @@ public class NetworkParser {
      * The outgoing byte buffer
      */
     CopyOnWriteArrayList<Byte> outgoingByteQueue = new CopyOnWriteArrayList<Byte>();
+
+    /**
+     * The number of bytes read
+     */
+    long bytesRead = 0;
     
     
     /**
@@ -69,26 +74,24 @@ public class NetworkParser {
     /**
      * Reads messages from the input stream
      */
-    public void readMessagesIn(){
-        try {
-            //read in bytes
-            int bytesRead = 0;
-            while(incomingStream.available() > 0){
-                // nextValue = incomingStream.read();
-                bytesRead = incomingStream.read(readBuffer, 0, READ_BLOCK_SIZE);
-                if(bytesRead > 0){
-                    incomingByteBuffer.add(readBuffer, bytesRead);
-                }
+    public void readMessagesIn() throws IOException {
+        //read in bytes
+        int bytesRead = 0;
+        while(incomingStream.available() > 0){
+            // nextValue = incomingStream.read();
+            bytesRead = incomingStream.read(readBuffer, 0, READ_BLOCK_SIZE);
+            if(bytesRead > 0){
+                incomingByteBuffer.add(readBuffer, bytesRead);
+                this.bytesRead = this.bytesRead + bytesRead;
+            } else {
+                break;
             }
-            //parse byte queue for messages
-            //for each message, append to clientIncomingMessageQueue
-            NetworkMessage newMessage;
-            while((newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer))!=null){
-                incomingMessageQueue.add(newMessage);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            System.exit(0);
+        }
+        //parse byte queue for messages
+        //for each message, append to clientIncomingMessageQueue
+        NetworkMessage newMessage;
+        while((newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer)) != null){
+            incomingMessageQueue.add(newMessage);
         }
     }
     
@@ -125,6 +128,14 @@ public class NetworkParser {
      */
     public void addOutgoingMessage(NetworkMessage message){
         outgoingMessageQueue.add(message);
+    }
+
+    /**
+     * Gets the number of bytes read
+     * @return The number of bytes read
+     */
+    public long getNumberOfBytesRead(){
+        return bytesRead;
     }
 
     /**
