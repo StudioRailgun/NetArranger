@@ -58,7 +58,7 @@ public class NetworkParser {
     /**
      * The number of bytes read
      */
-    long bytesRead = 0;
+    long totalBytesRead = 0;
     
     
     /**
@@ -82,15 +82,13 @@ public class NetworkParser {
             bytesRead = incomingStream.read(readBuffer, 0, READ_BLOCK_SIZE);
             if(bytesRead > 0){
                 incomingByteBuffer.add(readBuffer, bytesRead);
-                this.bytesRead = this.bytesRead + bytesRead;
-            } else {
-                break;
             }
+            totalBytesRead = totalBytesRead + bytesRead;
         }
         //parse byte queue for messages
         //for each message, append to clientIncomingMessageQueue
         NetworkMessage newMessage;
-        while((newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer)) != null){
+        while((newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer))!=null){
             incomingMessageQueue.add(newMessage);
         }
     }
@@ -131,14 +129,6 @@ public class NetworkParser {
     }
 
     /**
-     * Gets the number of bytes read
-     * @return The number of bytes read
-     */
-    public long getNumberOfBytesRead(){
-        return bytesRead;
-    }
-
-    /**
      * Copies the current contents of the incoming messages queue to a provided list
      * @param messages The list to copy the incoming messages to
      */
@@ -152,6 +142,14 @@ public class NetworkParser {
      */
     public void copyOutgoingMessages(List<NetworkMessage> messages){
         messages.addAll(outgoingMessageQueue);
+    }
+
+    /**
+     * Gets the total number of bytes read by this connection
+     * @return The total number of bytes
+     */
+    public long getNumberOfBytesRead(){
+        return totalBytesRead;
     }
     
 }
