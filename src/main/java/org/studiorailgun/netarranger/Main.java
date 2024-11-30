@@ -10,6 +10,7 @@ import org.studiorailgun.netarranger.classes.TypedMessage;
 import org.studiorailgun.netarranger.model.Category;
 import org.studiorailgun.netarranger.model.ConfigFile;
 import org.studiorailgun.netarranger.model.MessageType;
+import org.studiorailgun.netarranger.utils.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +46,7 @@ public class Main {
             }
             
             //delete the sources dir if it exists
-            recursiveDeletePath(config.getOutputPath());
+            // recursiveDeletePath(config.getOutputPath());
             
             //write source files out
             writeByteStreamUtils(config);
@@ -123,7 +124,7 @@ public class Main {
         
         try {
             Files.createDirectories(new File(fullOutputDirectory).toPath());
-            Files.write(new File(fullOutputPath).toPath(), sourceGenerator.generateClassSource().getBytes());
+            FileUtils.write(new File(fullOutputPath).toPath(), sourceGenerator.generateClassSource().getBytes());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -141,7 +142,7 @@ public class Main {
         
         try {
             Files.createDirectories(new File(fullOutputDirectory).toPath());
-            Files.write(new File(fullOutputPath).toPath(), sourceGenerator.generateClassSource().getBytes());
+            FileUtils.write(new File(fullOutputPath).toPath(), sourceGenerator.generateClassSource().getBytes());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -159,7 +160,7 @@ public class Main {
         
         try {
             Files.createDirectories(new File(fullOutputDirectory).toPath());
-            Files.write(new File(fullOutputPath).toPath(), sourceGenerator.generateClassSource().getBytes());
+            FileUtils.write(new File(fullOutputPath).toPath(), sourceGenerator.generateClassSource().getBytes());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -177,7 +178,7 @@ public class Main {
         
         try {
             Files.createDirectories(new File(fullOutputDirectory).toPath());
-            Files.write(new File(fullOutputPath).toPath(), sourceGenerator.generateClassSource().getBytes());
+            FileUtils.write(new File(fullOutputPath).toPath(), sourceGenerator.generateClassSource().getBytes());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -195,7 +196,7 @@ public class Main {
         
         try {
             Files.createDirectories(new File(fullOutputDirectory).toPath());
-            Files.write(new File(fullOutputPath).toPath(), sourceGenerator.generateClassSource().getBytes());
+            FileUtils.write(new File(fullOutputPath).toPath(), sourceGenerator.generateClassSource().getBytes());
         } catch (IOException ex) {
             ex.printStackTrace();
         }

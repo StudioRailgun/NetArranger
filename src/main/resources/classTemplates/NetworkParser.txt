@@ -13,7 +13,7 @@ public class NetworkParser {
     /**
      * The size of the read buffer
      */
-    static final int READ_BLOCK_SIZE = 4 * 1024 * 1024;
+    static final int READ_BLOCK_SIZE = 16 * 1024 * 1024;
 
     /**
      * The size of the circular buffer
