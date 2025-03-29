@@ -172,9 +172,17 @@ public class TypedMessage extends SourceGenerator {
         fullFile = fullFile + "     * Constructor\n";
         fullFile = fullFile + "     * @param messageType The type of this message\n";
         fullFile = fullFile + "     */\n";
-        fullFile = fullFile + "    " + cat.getCategoryName() + "Message(" + cat.getCategoryName() + "MessageType messageType){\n";
+        fullFile = fullFile + "    private " + cat.getCategoryName() + "Message(" + cat.getCategoryName() + "MessageType messageType){\n";
         fullFile = fullFile + "        this.type = MessageType." + cat.getCategoryName().toUpperCase() + "_MESSAGE;\n";
         fullFile = fullFile + "        this.messageType = messageType;\n";
+        fullFile = fullFile + "    }\n\n";
+
+        //second constructor
+        fullFile = fullFile + "    /**\n";
+        fullFile = fullFile + "     * Constructor\n";
+        fullFile = fullFile + "     */\n";
+        fullFile = fullFile + "    protected " + cat.getCategoryName() + "Message(){\n";
+        fullFile = fullFile + "        this.type = MessageType." + cat.getCategoryName().toUpperCase() + "_MESSAGE;\n";
         fullFile = fullFile + "    }\n\n";
         
         //getter and setter for message subtype
@@ -504,9 +512,10 @@ public class TypedMessage extends SourceGenerator {
         rVal = rVal + "    /**\n";
         rVal = rVal + "     * Parses a message of type " + type.getMessageName() + "\n";
         rVal = rVal + "     */\n";
-        rVal = rVal + "    public static " + cat.getCategoryName() + "Message parse" + type.getMessageName() + "Message(CircularByteBuffer byteBuffer){\n";
-        rVal = rVal + "        " + cat.getCategoryName() + "Message rVal = new " + cat.getCategoryName() + "Message(" + cat.getCategoryName() + "MessageType." + type.getMessageName().toUpperCase() + ");\n";
-        rVal = rVal + "        stripPacketHeader(byteBuffer);\n";
+        rVal = rVal + "    public static " + cat.getCategoryName() + "Message parse" + type.getMessageName() + "Message(CircularByteBuffer byteBuffer, MessagePool pool){\n";
+        rVal = rVal + "        " + cat.getCategoryName() + "Message rVal = (" + cat.getCategoryName() + "Message)pool.get(MessageType." + cat.getCategoryName().toUpperCase() + "_MESSAGE);\n";
+        rVal = rVal + "        rVal.messageType = " + cat.getCategoryName() + "MessageType." + type.getMessageName().toUpperCase() + ";\n";
+        rVal = rVal + "        " + cat.getCategoryName() + "Message.stripPacketHeader(byteBuffer);\n";
         for(String data : type.getData()){
             switch(typeMap.get(data)){
                 case "FIXED_INT":

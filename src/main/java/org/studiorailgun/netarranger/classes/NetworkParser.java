@@ -28,6 +28,7 @@ public class NetworkParser extends SourceGenerator {
         String fullFile = "package " + config.getPackageName() + ".net.raw;\n\n";
         
         //attach ByteUtils
+        fullFile = fullFile + "import " + config.getPackageName() + ".net.message.MessagePool;\n";
         fullFile = fullFile + "import " + config.getPackageName() + ".net.message.NetworkMessage;\n";
         
         //content

@@ -39,6 +39,11 @@ public class NetworkParser {
      * The queue of outgoing messages that have yet to be sent
      */
     CopyOnWriteArrayList<NetworkMessage> outgoingMessageQueue = new CopyOnWriteArrayList<NetworkMessage>();
+
+    /**
+     * Message object pool
+     */
+    MessagePool pool = new MessagePool();
     
     /**
      * The byte buffer for storing incoming bytes
@@ -88,7 +93,7 @@ public class NetworkParser {
         //parse byte queue for messages
         //for each message, append to clientIncomingMessageQueue
         NetworkMessage newMessage;
-        while((newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer))!=null){
+        while((newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer,this.pool))!=null){
             incomingMessageQueue.add(newMessage);
         }
     }
@@ -101,6 +106,7 @@ public class NetworkParser {
         for(NetworkMessage message : outgoingMessageQueue){
             outgoingMessageQueue.remove(message);
             outgoingStream.write(message.getRawBytes());
+            this.pool.release(message);
         }
     }
     
@@ -150,6 +156,22 @@ public class NetworkParser {
      */
     public long getNumberOfBytesRead(){
         return totalBytesRead;
+    }
+
+    /**
+     * Releases a network message object back into the pool
+     * @param message The message
+     */
+    public void release(NetworkMessage message){
+        this.pool.release(message);
+    }
+
+    /**
+     * Gets the message pool
+     * @return The message pool
+     */
+    public MessagePool getMessagePool(){
+        return this.pool;
     }
     
 }

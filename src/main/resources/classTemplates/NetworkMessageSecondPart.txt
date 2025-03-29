@@ -34,9 +34,10 @@
     /**
      * Parses the byte stream for the next message
      * @param byteBuffer The byte buffer
+     * @param pool The message pool
      * @return The message if one is at the front of the byte stream, null otherwise
      */
-    public static NetworkMessage parseBytestreamForMessage(CircularByteBuffer byteBuffer){
+    public static NetworkMessage parseBytestreamForMessage(CircularByteBuffer byteBuffer, MessagePool pool){
         NetworkMessage rVal = null;
         byte firstByte;
         byte secondByte;

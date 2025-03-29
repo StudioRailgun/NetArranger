@@ -3,6 +3,7 @@ package org.studiorailgun.netarranger;
 import com.google.gson.Gson;
 
 import org.studiorailgun.netarranger.classes.ByteStreamUtils;
+import org.studiorailgun.netarranger.classes.MessagePool;
 import org.studiorailgun.netarranger.classes.NetworkMessage;
 import org.studiorailgun.netarranger.classes.NetworkParser;
 import org.studiorailgun.netarranger.classes.TypeBytes;
@@ -33,7 +34,7 @@ public class Main {
             //recurse down if applicable
             if(config.getSubfiles() != null){
                 for(String path : config.getSubfiles()){
-                    recursivelyParseConfigFiles(config, path);
+                    Main.recursivelyParseConfigFiles(config, path);
                 }
             }
             //log the categories, packets, and packet contents found
@@ -49,12 +50,13 @@ public class Main {
             // recursiveDeletePath(config.getOutputPath());
             
             //write source files out
-            writeByteStreamUtils(config);
-            writeTypeBytesClass(config);
-            writeNetworkParserClass(config);
-            writeNetworkMessageClass(config);
+            Main.writeByteStreamUtils(config);
+            Main.writeTypeBytesClass(config);
+            Main.writeMessagePoolClass(config);
+            Main.writeNetworkParserClass(config);
+            Main.writeNetworkMessageClass(config);
             for(Category cat : config.getCategories()){
-                createMessageClassForCategory(config,cat);
+                Main.createMessageClassForCategory(config,cat);
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -79,7 +81,7 @@ public class Main {
                 //recurse down if applicable
                 if(currentConfig.getSubfiles() != null){
                     for(String path : currentConfig.getSubfiles()){
-                        recursivelyParseConfigFiles(topLevelConfig, path);
+                        Main.recursivelyParseConfigFiles(topLevelConfig, path);
                     }
                 }
             }
@@ -96,7 +98,7 @@ public class Main {
         File f = new File(path);
         if(f.isDirectory()){
             for(String child : f.list()){
-                recursiveDeletePath(path + "/" + child);
+                Main.recursiveDeletePath(path + "/" + child);
             }
             try {
                 Files.delete(f.toPath());
@@ -139,6 +141,24 @@ public class Main {
         String fullOutputPath = fullOutputDirectory + "TypeBytes.java";
         
         TypeBytes sourceGenerator = new TypeBytes(config);
+        
+        try {
+            Files.createDirectories(new File(fullOutputDirectory).toPath());
+            FileUtils.write(new File(fullOutputPath).toPath(), sourceGenerator.generateClassSource().getBytes());
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Writes the MessagePool.java file
+     * @param config The config for the current run
+     */
+    static void writeMessagePoolClass(ConfigFile config){
+        String fullOutputDirectory = config.getOutputPath() + "/net/message/";
+        String fullOutputPath = fullOutputDirectory + "MessagePool.java";
+        
+        MessagePool sourceGenerator = new MessagePool(config);
         
         try {
             Files.createDirectories(new File(fullOutputDirectory).toPath());

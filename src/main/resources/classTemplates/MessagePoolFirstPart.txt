@@ -1,0 +1,12 @@
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
+
+import electrosphere.net.parser.net.message.NetworkMessage.MessageType;
+
+/**
+ * Pools message objects to reduce allocations
+ */
+public class MessagePool {
+    

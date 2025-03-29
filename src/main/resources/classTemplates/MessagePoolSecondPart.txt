@@ -1,0 +1,10 @@
+    /**
+     * Controls whether the pool should always allocate or not
+     */
+    boolean alwaysAllocate = false;
+
+    /**
+     * Lock for thread-safeing operations
+     */
+    ReentrantLock lock = new ReentrantLock();
+

@@ -1,0 +1,9 @@
+    /**
+     * Sets whether the pool should always allocate or try to pool
+     * @param alwaysAllocate true to always allocate a new message, false enable message pooling
+     */
+    public void setAlwaysAllocate(boolean alwaysAllocate){
+        this.alwaysAllocate = alwaysAllocate;
+    }
+
+}
