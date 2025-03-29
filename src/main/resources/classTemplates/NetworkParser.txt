@@ -64,6 +64,12 @@ public class NetworkParser {
      * The number of bytes read
      */
     long totalBytesRead = 0;
+
+    /**
+     * If set to true, the parser will automatically release messages on send.
+     * Otherwise, will not release when the message is sent.
+     */
+    boolean releaseOnSend = true;
     
     
     /**
@@ -106,7 +112,9 @@ public class NetworkParser {
         for(NetworkMessage message : outgoingMessageQueue){
             outgoingMessageQueue.remove(message);
             outgoingStream.write(message.getRawBytes());
-            this.pool.release(message);
+            if(this.releaseOnSend){
+                this.pool.release(message);
+            }
         }
     }
     
@@ -173,5 +181,14 @@ public class NetworkParser {
     public MessagePool getMessagePool(){
         return this.pool;
     }
-    
+
+    /**
+     * If set to true, the parser will automatically release messages on send.
+     * Otherwise, will not release when the message is sent.
+     * @param releaseOnSend true to release messages on send, false otherwise
+     */
+    public void setReleaseOnSend(boolean releaseOnSend){
+        this.releaseOnSend = releaseOnSend;
+    }
+
 }
