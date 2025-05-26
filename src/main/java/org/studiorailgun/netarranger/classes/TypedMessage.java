@@ -104,6 +104,8 @@ public class TypedMessage extends SourceGenerator {
         String fullFile = "package " + config.getPackageName() + ".net.message;\n\n";
         
         //imports
+        fullFile = fullFile + "import java.io.IOException;\n";
+        fullFile = fullFile + "import java.io.OutputStream;\n";
         fullFile = fullFile + "import io.github.studiorailgun.CircularByteBuffer;\n";
         if(usesByteUtils){
             fullFile = fullFile + "import " + config.getPackageName() + ".util.ByteStreamUtils;\n";
@@ -348,13 +350,13 @@ public class TypedMessage extends SourceGenerator {
             for(String data : type.getData()){
                 fullFile = fullFile + "        rVal.set" + data + "(" + data + ");\n";
             }
-            fullFile = fullFile + "        rVal.serialize();\n";
             fullFile = fullFile + "        return rVal;\n";
             fullFile = fullFile + "    }\n\n";
         }
         
         
         //serialize function
+        fullFile = fullFile + "    @Deprecated\n";
         fullFile = fullFile + "    @Override\n";
         fullFile = fullFile + "    void serialize(){\n";
         if(hasFixedData || hasStringData){
@@ -462,6 +464,83 @@ public class TypedMessage extends SourceGenerator {
         }
         fullFile = fullFile + "        }\n";
         fullFile = fullFile + "        serialized = true;\n";
+        fullFile = fullFile + "    }\n\n";
+
+
+        //write method
+        fullFile = fullFile + "    @Override\n";
+        fullFile = fullFile + "    public void write(OutputStream stream) throws IOException {\n";
+        fullFile = fullFile + "        switch(this.messageType){\n";
+        for(MessageType type : cat.getMessageTypes()){
+            //get all data types
+            HashMap<String,String> typeMap = new HashMap<String,String>();
+            for(Data variable : cat.getData()){
+                typeMap.put(variable.getName(), variable.getType());
+            }
+            fullFile = fullFile + "            case " + type.getMessageName().toUpperCase() + ":\n";
+            String packetSizeCalculation = "2"; // 2 for packet header
+            for(String variable : type.getData()){
+                switch(typeMap.get(variable)){
+                    case "FIXED_INT":
+                        packetSizeCalculation = packetSizeCalculation + "+4";
+                        break;
+                    case "FIXED_FLOAT":
+                        packetSizeCalculation = packetSizeCalculation + "+4";
+                        break;
+                    case "FIXED_LONG":
+                        packetSizeCalculation = packetSizeCalculation + "+8";
+                        break;
+                    case "VAR_STRING":
+                        packetSizeCalculation = packetSizeCalculation + "+4+" + variable + ".length()"; // 4 for integer header
+                        break;
+                    case "BYTE_ARRAY":
+                        packetSizeCalculation = packetSizeCalculation + "+4+" + variable + ".length"; // 4 for integer header
+                        break;
+                    case "FIXED_DOUBLE":
+                        packetSizeCalculation = packetSizeCalculation + "+8";
+                        break;
+                }
+            }
+            fullFile = fullFile + "                //message header\n";
+            fullFile = fullFile + "                stream.write(TypeBytes.MESSAGE_TYPE_" + cat.getCategoryName().toUpperCase() + ");\n";
+            fullFile = fullFile + "                stream.write(TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + ");\n";
+            int offset = 2;
+            String offsetFunctions = "";
+            for(String data : type.getData()){
+                switch(typeMap.get(data)){
+                    case "FIXED_INT":
+                        fullFile = fullFile + "                ByteStreamUtils.writeInt(stream, " + data + ");\n";
+                        offset = offset + 4;
+                        break;
+                    case "FIXED_FLOAT":
+                        fullFile = fullFile + "                ByteStreamUtils.writeFloat(stream, " + data + ");\n";
+                        offset = offset + 4;
+                        break;
+                    case "FIXED_LONG":
+                        fullFile = fullFile + "                ByteStreamUtils.writeLong(stream, " + data + ");\n";
+                        offset = offset + 8;
+                        break;
+                    case "VAR_STRING":
+                        fullFile = fullFile + "                ByteStreamUtils.writeString(stream, " + data + ");\n";
+                        offsetFunctions = offsetFunctions + "+" + data + ".length()";
+                        break;
+                    case "BYTE_ARRAY":
+                        //serialize header that contains length of byte array
+                        fullFile = fullFile + "                ByteStreamUtils.writeInt(stream, " + data + ".length);\n";
+                        offset = offset + 4;
+                        //serialize actual bytes
+                        fullFile = fullFile + "                stream.write(" + data + ");\n";
+                        offsetFunctions = offsetFunctions + "+" + data + ".length";
+                        break;
+                    case "FIXED_DOUBLE":
+                        fullFile = fullFile + "                ByteStreamUtils.writeDouble(stream, " + data + ");\n";
+                        offset = offset + 8;
+                        break;
+                }
+            }
+            fullFile = fullFile + "                break;\n";
+        }
+        fullFile = fullFile + "        }\n";
         fullFile = fullFile + "    }\n\n";
         
         //end class

@@ -1,5 +1,8 @@
 import io.github.studiorailgun.CircularByteBuffer;
 
+import java.io.IOException;
+import java.io.OutputStream;
+
 /**
  * A network message
  */

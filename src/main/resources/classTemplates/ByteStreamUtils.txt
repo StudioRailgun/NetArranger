@@ -1,3 +1,5 @@
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -285,6 +287,81 @@ public class ByteStreamUtils {
         rVal[7] = integerCompactor.get(7);
         bufferLock.release();
         return rVal;
+    }
+
+    public static void writeInt(OutputStream stream, int i) throws IOException {
+        bufferLock.acquireUninterruptibly();
+        integerCompactor.clear();
+        integerCompactor.position(0);
+        integerCompactor.limit(4);
+        integerCompactor.putInt(i);
+        integerCompactor.position(0);
+        integerCompactor.limit(4);
+        stream.write(integerCompactor.get(0));
+        stream.write(integerCompactor.get(1));
+        stream.write(integerCompactor.get(2));
+        stream.write(integerCompactor.get(3));
+        bufferLock.release();
+    }
+    
+    public static void writeFloat(OutputStream stream, float i) throws IOException {
+        bufferLock.acquireUninterruptibly();
+        integerCompactor.clear();
+        integerCompactor.position(0);
+        integerCompactor.limit(4);
+        integerCompactor.putFloat(i);
+        integerCompactor.position(0);
+        integerCompactor.limit(4);
+        stream.write(integerCompactor.get(0));
+        stream.write(integerCompactor.get(1));
+        stream.write(integerCompactor.get(2));
+        stream.write(integerCompactor.get(3));
+        bufferLock.release();
+    }
+    
+    public static void writeLong(OutputStream stream, long i) throws IOException {
+        bufferLock.acquireUninterruptibly();
+        integerCompactor.clear();
+        integerCompactor.position(0);
+        integerCompactor.limit(8);
+        integerCompactor.putLong(i);
+        integerCompactor.position(0);
+        integerCompactor.limit(8);
+        stream.write(integerCompactor.get(0));
+        stream.write(integerCompactor.get(1));
+        stream.write(integerCompactor.get(2));
+        stream.write(integerCompactor.get(3));
+        stream.write(integerCompactor.get(4));
+        stream.write(integerCompactor.get(5));
+        stream.write(integerCompactor.get(6));
+        stream.write(integerCompactor.get(7));
+        bufferLock.release();
+    }
+    
+    public static void writeString(OutputStream stream, String s) throws IOException {
+        int length = s.length();
+        writeInt(stream, length);
+        byte[] stringBytes = s.getBytes();
+        stream.write(stringBytes);
+    }
+
+    public static void writeDouble(OutputStream stream, double i) throws IOException {
+        bufferLock.acquireUninterruptibly();
+        integerCompactor.clear();
+        integerCompactor.position(0);
+        integerCompactor.limit(8);
+        integerCompactor.putDouble(i);
+        integerCompactor.position(0);
+        integerCompactor.limit(8);
+        stream.write(integerCompactor.get(0));
+        stream.write(integerCompactor.get(1));
+        stream.write(integerCompactor.get(2));
+        stream.write(integerCompactor.get(3));
+        stream.write(integerCompactor.get(4));
+        stream.write(integerCompactor.get(5));
+        stream.write(integerCompactor.get(6));
+        stream.write(integerCompactor.get(7));
+        bufferLock.release();
     }
     
 }

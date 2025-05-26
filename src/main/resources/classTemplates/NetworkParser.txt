@@ -111,7 +111,7 @@ public class NetworkParser {
     public void pushMessagesOut() throws IOException {
         for(NetworkMessage message : outgoingMessageQueue){
             outgoingMessageQueue.remove(message);
-            outgoingStream.write(message.getRawBytes());
+            message.write(outgoingStream);
             if(this.releaseOnSend){
                 this.pool.release(message);
             }

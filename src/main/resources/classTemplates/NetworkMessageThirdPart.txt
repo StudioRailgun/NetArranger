@@ -2,6 +2,12 @@
         }
         return rVal;
     }
+
+    /**
+     * Writes this message to the output stream
+     * @param stream The stream
+     */
+    public abstract void write(OutputStream stream) throws IOException;
     
     /**
      * Checks if this message is serialized or not
