@@ -48,7 +48,6 @@ public class TypedMessage extends SourceGenerator {
 
     @Override
     public String generateClassSource() {
-        boolean usesLists = false;
         boolean usesByteUtils = false;
         boolean hasStringData = false;
         boolean hasFixedData = false;
@@ -63,23 +62,19 @@ public class TypedMessage extends SourceGenerator {
                 } break;
                 case "FIXED_FLOAT": {
                     fixedSizeVariableMap.put(data.getName(), true);
-                    usesLists = true;
                     hasFixedData = true;
                 } break;
                 case "FIXED_LONG": {
                     fixedSizeVariableMap.put(data.getName(), true);
-                    usesLists = true;
                     hasFixedData = true;
                 } break;
                 case "VAR_STRING": {
                     fixedSizeVariableMap.put(data.getName(), false);
-                    usesLists = true;
                     usesByteUtils = true;
                     hasStringData = true;
                 } break;
                 case "FIXED_DOUBLE": {
                     fixedSizeVariableMap.put(data.getName(), true);
-                    usesLists = true;
                     hasFixedData = true;
                 } break;
                 case "BYTE_ARRAY": {
@@ -106,13 +101,9 @@ public class TypedMessage extends SourceGenerator {
         //imports
         fullFile = fullFile + "import java.io.IOException;\n";
         fullFile = fullFile + "import java.io.OutputStream;\n";
-        fullFile = fullFile + "import io.github.studiorailgun.CircularByteBuffer;\n";
+        fullFile = fullFile + "import java.nio.ByteBuffer;\n";
         if(usesByteUtils){
             fullFile = fullFile + "import " + config.getPackageName() + ".util.ByteStreamUtils;\n";
-        }
-        if(usesLists){
-            fullFile = fullFile + "import java.util.LinkedList;\n";
-            fullFile = fullFile + "import java.util.List;\n\n";
         }
         fullFile = fullFile + "import java.util.Map;\n";
         fullFile = fullFile + "import java.util.function.BiConsumer;\n\n";
@@ -272,34 +263,25 @@ public class TypedMessage extends SourceGenerator {
             }
         }
         
-        //strip packet header
-        fullFile = fullFile + "    /**\n";
-        fullFile = fullFile + "     * Removes the packet header from the buffer\n";
-        fullFile = fullFile + "     * @param byteBuffer The buffer\n";
-        fullFile = fullFile + "     */\n";
-        fullFile = fullFile + "    static void stripPacketHeader(CircularByteBuffer byteBuffer){\n";
-        fullFile = fullFile + "        byteBuffer.read(2);\n";
-        fullFile = fullFile + "    }\n\n";
-        
         //parse check function
-        fullFile = fullFile + "    /**\n";
-        fullFile = fullFile + "     * Checks if this message can be parsed (ie are all bytes present)\n";
-        fullFile = fullFile + "     * @param byteBuffer The buffer\n";
-        fullFile = fullFile + "     * @param secondByte The second byte, signifying the subtype of the message\n";
-        fullFile = fullFile + "     * @return true if the message can be parsed, false otherwise\n";
-        fullFile = fullFile + "     */\n";
-        fullFile = fullFile + "    public static boolean canParseMessage(CircularByteBuffer byteBuffer, byte secondByte){\n";
-        fullFile = fullFile + "        switch(secondByte){\n";
-        for(MessageType type : cat.getMessageTypes()){
-            if(fixedSizeMessageMap.get(type)){
-                fullFile = fullFile + getFixedSizeParseCheck(cat,type);
-            } else {
-                fullFile = fullFile + getVariableSizeParseCheck(cat,type);
-            }
-        }
-        fullFile = fullFile + "        }\n";
-        fullFile = fullFile + "        return false;\n";
-        fullFile = fullFile + "    }\n\n";
+        // fullFile = fullFile + "    /**\n";
+        // fullFile = fullFile + "     * Checks if this message can be parsed (ie are all bytes present)\n";
+        // fullFile = fullFile + "     * @param byteBuffer The buffer\n";
+        // fullFile = fullFile + "     * @param secondByte The second byte, signifying the subtype of the message\n";
+        // fullFile = fullFile + "     * @return true if the message can be parsed, false otherwise\n";
+        // fullFile = fullFile + "     */\n";
+        // fullFile = fullFile + "    public static boolean canParseMessage(ByteBuffer byteBuffer, byte secondByte){\n";
+        // fullFile = fullFile + "        switch(secondByte){\n";
+        // for(MessageType type : cat.getMessageTypes()){
+        //     if(fixedSizeMessageMap.get(type)){
+        //         fullFile = fullFile + getFixedSizeParseCheck(cat,type);
+        //     } else {
+        //         fullFile = fullFile + getVariableSizeParseCheck(cat,type);
+        //     }
+        // }
+        // fullFile = fullFile + "        }\n";
+        // fullFile = fullFile + "        return false;\n";
+        // fullFile = fullFile + "    }\n\n";
         
         //parse and construct functions
         for(MessageType type : cat.getMessageTypes()){
@@ -312,7 +294,7 @@ public class TypedMessage extends SourceGenerator {
             if(fixedSizeMessageMap.get(type)){
                 fullFile = fullFile + getParseFunction(cat,type,typeMap);
             } else {
-                fullFile = fullFile + getParseCheckTypeFunction(cat,type,typeMap);
+                // fullFile = fullFile + getParseCheckTypeFunction(cat,type,typeMap);
                 fullFile = fullFile + getParseFunction(cat,type,typeMap);
             }
             
@@ -479,8 +461,9 @@ public class TypedMessage extends SourceGenerator {
             for(Data variable : cat.getData()){
                 typeMap.put(variable.getName(), variable.getType());
             }
-            fullFile = fullFile + "            case " + type.getMessageName().toUpperCase() + ":\n";
+            fullFile = fullFile + "            case " + type.getMessageName().toUpperCase() + ": {\n";
             String packetSizeCalculation = "2"; // 2 for packet header
+            boolean variableLengthPacket = false;
             for(String variable : type.getData()){
                 switch(typeMap.get(variable)){
                     case "FIXED_INT":
@@ -494,53 +477,72 @@ public class TypedMessage extends SourceGenerator {
                         break;
                     case "VAR_STRING":
                         packetSizeCalculation = packetSizeCalculation + "+4+" + variable + ".length()"; // 4 for integer header
+                        variableLengthPacket = true;
                         break;
                     case "BYTE_ARRAY":
                         packetSizeCalculation = packetSizeCalculation + "+4+" + variable + ".length"; // 4 for integer header
+                        variableLengthPacket = true;
                         break;
                     case "FIXED_DOUBLE":
                         packetSizeCalculation = packetSizeCalculation + "+8";
                         break;
                 }
             }
+            fullFile = fullFile + "                \n";
+            fullFile = fullFile + "                //\n";
             fullFile = fullFile + "                //message header\n";
             fullFile = fullFile + "                stream.write(TypeBytes.MESSAGE_TYPE_" + cat.getCategoryName().toUpperCase() + ");\n";
             fullFile = fullFile + "                stream.write(TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + ");\n";
-            int offset = 2;
+
+            //
+            //write variable length table if relevant
+            if(variableLengthPacket){
+                fullFile = fullFile + "                \n";
+                fullFile = fullFile + "                //\n";
+                fullFile = fullFile + "                //Write variable length table in packet\n";
+                for(String data : type.getData()){
+                    switch(typeMap.get(data)){
+                        case "VAR_STRING": {
+                            fullFile = fullFile + "                ByteStreamUtils.writeInt(stream, " + data + ".length());\n";
+                        } break;
+                        case "BYTE_ARRAY": {
+                            //serialize header that contains length of byte array
+                            fullFile = fullFile + "                ByteStreamUtils.writeInt(stream, " + data + ".length);\n";
+                        } break;
+                    }
+                }
+            }
+
+            fullFile = fullFile + "                \n";
+            fullFile = fullFile + "                //\n";
+            fullFile = fullFile + "                //Write body of packet\n";
             String offsetFunctions = "";
             for(String data : type.getData()){
                 switch(typeMap.get(data)){
-                    case "FIXED_INT":
+                    case "FIXED_INT": {
                         fullFile = fullFile + "                ByteStreamUtils.writeInt(stream, " + data + ");\n";
-                        offset = offset + 4;
-                        break;
-                    case "FIXED_FLOAT":
+                    } break;
+                    case "FIXED_FLOAT": {
                         fullFile = fullFile + "                ByteStreamUtils.writeFloat(stream, " + data + ");\n";
-                        offset = offset + 4;
-                        break;
-                    case "FIXED_LONG":
+                    } break;
+                    case "FIXED_LONG": {
                         fullFile = fullFile + "                ByteStreamUtils.writeLong(stream, " + data + ");\n";
-                        offset = offset + 8;
-                        break;
-                    case "VAR_STRING":
+                    } break;
+                    case "VAR_STRING": {
                         fullFile = fullFile + "                ByteStreamUtils.writeString(stream, " + data + ");\n";
                         offsetFunctions = offsetFunctions + "+" + data + ".length()";
-                        break;
-                    case "BYTE_ARRAY":
-                        //serialize header that contains length of byte array
-                        fullFile = fullFile + "                ByteStreamUtils.writeInt(stream, " + data + ".length);\n";
-                        offset = offset + 4;
+                    } break;
+                    case "BYTE_ARRAY": {
                         //serialize actual bytes
                         fullFile = fullFile + "                stream.write(" + data + ");\n";
                         offsetFunctions = offsetFunctions + "+" + data + ".length";
-                        break;
-                    case "FIXED_DOUBLE":
+                    } break;
+                    case "FIXED_DOUBLE": {
                         fullFile = fullFile + "                ByteStreamUtils.writeDouble(stream, " + data + ");\n";
-                        offset = offset + 8;
-                        break;
+                    } break;
                 }
             }
-            fullFile = fullFile + "                break;\n";
+            fullFile = fullFile + "            } break;\n";
         }
         fullFile = fullFile + "        }\n";
         fullFile = fullFile + "    }\n\n";
@@ -560,7 +562,7 @@ public class TypedMessage extends SourceGenerator {
     static String getFixedSizeParseCheck(Category cat, MessageType type){
         String rVal = "";
         rVal = rVal + "            case TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + ":\n";
-        rVal = rVal + "                if(byteBuffer.getRemaining() >= TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + "_SIZE){\n";
+        rVal = rVal + "                if(byteBuffer.remaining() >= TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + "_SIZE){\n";
         rVal = rVal + "                    return true;\n";
         rVal = rVal + "                } else {\n";
         rVal = rVal + "                    return false;\n";
@@ -593,15 +595,78 @@ public class TypedMessage extends SourceGenerator {
         rVal = rVal + "    /**\n";
         rVal = rVal + "     * Parses a message of type " + type.getMessageName() + "\n";
         rVal = rVal + "     */\n";
-        rVal = rVal + "    public static " + cat.getCategoryName() + "Message parse" + type.getMessageName() + "Message(CircularByteBuffer byteBuffer, MessagePool pool, Map<Short,BiConsumer<NetworkMessage,CircularByteBuffer>> customParserMap){\n";
+        rVal = rVal + "    public static " + cat.getCategoryName() + "Message parse" + type.getMessageName() + "Message(ByteBuffer byteBuffer, MessagePool pool, Map<Short,BiConsumer<NetworkMessage,ByteBuffer>> customParserMap){\n";
+
+
+        //
+        //Check that we can read the message
+        //
+        int currentLength = 0;
+        boolean hasVariableLength = false;
+        //Need to keep track of the variables that themselves have variable length
+        //so we can check them when accounting for packet length
+        for(String currentData : type.getData()){
+            switch(typeMap.get(currentData)){
+                case "FIXED_INT":
+                    currentLength = currentLength + 4; // size of int
+                    break;
+                case "FIXED_FLOAT":
+                    currentLength = currentLength + 4; // size of float
+                    break;
+                case "FIXED_LONG":
+                    currentLength = currentLength + 8; // size of long
+                    break;
+                case "VAR_STRING":
+                    currentLength = currentLength + 4; // size of entry in variable length table
+                    hasVariableLength = true;
+                    break;
+                case "BYTE_ARRAY":
+                    hasVariableLength = true;
+                    currentLength = currentLength + 4; // size of entry in variable length table
+                    break;
+                case "FIXED_DOUBLE":
+                    currentLength = currentLength + 8; // size of long
+                    break;
+            }
+        }
+        rVal = rVal + "        if(byteBuffer.remaining() < " + currentLength +"){\n";
+        rVal = rVal + "            return null;\n";
+        rVal = rVal + "        }\n";
+
+        //
+        //if there are variable-length types, read the variable length table
+        if(hasVariableLength){
+            rVal = rVal + "        int lenAccumulator = 0;\n";
+            for(String currentData : type.getData()){
+                switch(typeMap.get(currentData)){
+                    case "VAR_STRING": {
+                        rVal = rVal + "        int " + currentData + "len = byteBuffer.getInt();\n";
+                        rVal = rVal + "        lenAccumulator = lenAccumulator + " + currentData + "len;\n";
+                    } break;
+                    case "BYTE_ARRAY": {
+                        rVal = rVal + "        int " + currentData + "len = byteBuffer.getInt();\n";
+                        rVal = rVal + "        lenAccumulator = lenAccumulator + " + currentData + "len;\n";
+                    } break;
+                }
+            }
+            rVal = rVal + "        if(byteBuffer.remaining() < " + currentLength + " + lenAccumulator){\n";
+            rVal = rVal + "            return null;\n";
+            rVal = rVal + "        }\n";
+        }
+
+
+
+        //
+        //Actually read the message
+        //
+
         rVal = rVal + "        " + cat.getCategoryName() + "Message rVal = (" + cat.getCategoryName() + "Message)pool.get(MessageType." + cat.getCategoryName().toUpperCase() + "_MESSAGE);\n";
         rVal = rVal + "        rVal.messageType = " + cat.getCategoryName() + "MessageType." + type.getMessageName().toUpperCase() + ";\n";
-        rVal = rVal + "        " + cat.getCategoryName() + "Message.stripPacketHeader(byteBuffer);\n";
         //check for parser type
         if(type.getCustomParser() != null && type.getCustomParser() == true){
             //custom parser provided by user per-app
             rVal = rVal + "        short pair = (short)((TypeBytes.MESSAGE_TYPE_" + cat.getCategoryName().toUpperCase() + " << 4) & TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + ");\n";
-            rVal = rVal + "        BiConsumer<NetworkMessage,CircularByteBuffer> customParser = customParserMap.get(pair);\n";
+            rVal = rVal + "        BiConsumer<NetworkMessage,ByteBuffer> customParser = customParserMap.get(pair);\n";
             rVal = rVal + "        if(customParser == null){\n";
             rVal = rVal + "            throw new Error(\"Custom parser undefined for message pair!\");\n";
             rVal = rVal + "        }\n";
@@ -611,22 +676,26 @@ public class TypedMessage extends SourceGenerator {
             for(String data : type.getData()){
                 switch(typeMap.get(data)){
                     case "FIXED_INT":
-                        rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popIntFromByteQueue(byteBuffer));\n";
+                        rVal = rVal + "        rVal.set" + data + "(byteBuffer.getInt());\n";
                         break;
                     case "FIXED_FLOAT":
-                        rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popFloatFromByteQueue(byteBuffer));\n";
+                        rVal = rVal + "        rVal.set" + data + "(byteBuffer.getFloat());\n";
                         break;
                     case "FIXED_LONG":
-                        rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popLongFromByteQueue(byteBuffer));\n";
+                        rVal = rVal + "        rVal.set" + data + "(byteBuffer.getLong());\n";
                         break;
                     case "VAR_STRING":
-                        rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popStringFromByteQueue(byteBuffer));\n";
+                        rVal = rVal + "        if(" + data + "len > 0){\n";
+                        rVal = rVal + "            rVal.set" + data + "(ByteStreamUtils.popStringFromByteBuffer(byteBuffer, " + data + "len));\n";
+                        rVal = rVal + "        }\n";
                         break;
                     case "BYTE_ARRAY":
-                        rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popByteArrayFromByteQueue(byteBuffer));\n";
+                        rVal = rVal + "        if(" + data + "len > 0){\n";
+                        rVal = rVal + "            rVal.set" + data + "(ByteStreamUtils.popByteArrayFromByteBuffer(byteBuffer, " + data + "len));\n";
+                        rVal = rVal + "        }\n";
                         break;
                     case "FIXED_DOUBLE":
-                        rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popDoubleFromByteQueue(byteBuffer));\n";
+                        rVal = rVal + "        rVal.set" + data + "(byteBuffer.getDouble());\n";
                         break;
                 }
             }
@@ -643,120 +712,65 @@ public class TypedMessage extends SourceGenerator {
      * @param typeMap The types of all variables in the message
      * @return The body of the function as a string
      */
-    static String getParseCheckTypeFunction(Category cat, MessageType type, HashMap<String,String> typeMap){
-        String rVal = "";
-        rVal = rVal + "    /**\n";
-        rVal = rVal + "     * Checks if a message of type " + type.getMessageName() + " can be parsed from the byte stream\n";
-        rVal = rVal + "     */\n";
-        rVal = rVal + "    public static boolean canParse" + type.getMessageName() + "Message(CircularByteBuffer byteBuffer){\n";
-        rVal = rVal + "        int currentStreamLength = byteBuffer.getRemaining();\n";
-        rVal = rVal + "        List<Byte> temporaryByteQueue = new LinkedList<Byte>();\n";
-        int currentLength = 2;
-        //Need to keep track of the variables that themselves have variable length
-        //so we can check them when accounting for packet length
-        String variableLengthVars = "";
-        for(String currentData : type.getData()){
-            switch(typeMap.get(currentData)){
-                case "FIXED_INT":
-                    currentLength = currentLength + 4; // size of int
-                    if(variableLengthVars.length() > 0){
-                        rVal = rVal + "        if(currentStreamLength < " + currentLength + " + " + variableLengthVars + "){\n";
-                    } else {
-                        rVal = rVal + "        if(currentStreamLength < " + currentLength + "){\n";
-                    }
-                    rVal = rVal + "            return false;\n";
-                    rVal = rVal + "        }\n";
-                    break;
-                case "FIXED_FLOAT":
-                    currentLength = currentLength + 4; // size of float
-                    if(variableLengthVars.length() > 0){
-                        rVal = rVal + "        if(currentStreamLength < " + currentLength + " + " + variableLengthVars + "){\n";
-                    } else {
-                        rVal = rVal + "        if(currentStreamLength < " + currentLength + "){\n";
-                    }
-                    rVal = rVal + "            return false;\n";
-                    rVal = rVal + "        }\n";
-                    break;
-                case "FIXED_LONG":
-                    currentLength = currentLength + 8; // size of long
-                    if(variableLengthVars.length() > 0){
-                        rVal = rVal + "        if(currentStreamLength < " + currentLength + " + " + variableLengthVars + "){\n";
-                    } else {
-                        rVal = rVal + "        if(currentStreamLength < " + currentLength + "){\n";
-                    }
-                    rVal = rVal + "            return false;\n";
-                    rVal = rVal + "        }\n";
-                    break;
-                case "VAR_STRING":
-                    currentLength = currentLength + 4; // size of int
-                    rVal = rVal + "        int " + currentData + "Size = 0;\n";
-                    rVal = rVal + "        if(currentStreamLength < " + currentLength + "){\n"; // have to account for integer header
-                    rVal = rVal + "            return false;\n";
-                    rVal = rVal + "        } else {\n";
-                    if(variableLengthVars.length() > 0){
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 0));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 1));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 2));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 3));\n";
-                    } else {
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 0));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 1));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 2));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 3));\n";
-                    }
-                    rVal = rVal + "            " + currentData + "Size = ByteStreamUtils.popIntFromByteQueue(temporaryByteQueue);\n";
-                    rVal = rVal + "        }\n";
-                    if(variableLengthVars.length() > 0){
-                        variableLengthVars = variableLengthVars + " + ";
-                    }
-                    variableLengthVars = variableLengthVars + currentData + "Size";
-                    rVal = rVal + "        if(currentStreamLength < " + currentLength + " + " + variableLengthVars + "){\n";
-                    rVal = rVal + "            return false;\n";
-                    rVal = rVal + "        }\n";
-                    break;
-                case "BYTE_ARRAY":
-                    currentLength = currentLength + 4; // size of int
-                    rVal = rVal + "        int " + currentData + "Size = 0;\n";
-                    rVal = rVal + "        if(currentStreamLength < " + currentLength + "){\n"; // have to account for integer header
-                    rVal = rVal + "            return false;\n";
-                    rVal = rVal + "        } else {\n";
-                    if(variableLengthVars.length() > 0){
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 0));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 1));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 2));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + " + variableLengthVars + " + 3));\n";
-                    } else {
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 0));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 1));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 2));\n";
-                        rVal = rVal + "            temporaryByteQueue.add(byteBuffer.peek(" + (currentLength - 4) + " + 3));\n";
-                    }
-                    rVal = rVal + "            " + currentData + "Size = ByteStreamUtils.popIntFromByteQueue(temporaryByteQueue);\n";
-                    rVal = rVal + "        }\n";
-                    if(variableLengthVars.length() > 0){
-                        variableLengthVars = variableLengthVars + " + ";
-                    }
-                    variableLengthVars = variableLengthVars + currentData + "Size";
-                    rVal = rVal + "        if(currentStreamLength < " + currentLength + " + " + variableLengthVars + "){\n";
-                    rVal = rVal + "            return false;\n";
-                    rVal = rVal + "        }\n";
-                    break;
-                case "FIXED_DOUBLE":
-                    currentLength = currentLength + 8; // size of long
-                    if(variableLengthVars.length() > 0){
-                        rVal = rVal + "        if(currentStreamLength < " + currentLength + " + " + variableLengthVars + "){\n";
-                    } else {
-                        rVal = rVal + "        if(currentStreamLength < " + currentLength + "){\n";
-                    }
-                    rVal = rVal + "            return false;\n";
-                    rVal = rVal + "        }\n";
-                    break;
-            }
-        }
-        rVal = rVal + "        return true;\n";
-        rVal = rVal + "    }\n\n";
-        return rVal;
-    }
+    // static String getParseCheckTypeFunction(Category cat, MessageType type, HashMap<String,String> typeMap){
+    //     String rVal = "";
+    //     rVal = rVal + "    /**\n";
+    //     rVal = rVal + "     * Checks if a message of type " + type.getMessageName() + " can be parsed from the byte stream\n";
+    //     rVal = rVal + "     */\n";
+    //     rVal = rVal + "    public static boolean canParse" + type.getMessageName() + "Message(ByteBuffer byteBuffer){\n";
+    //     rVal = rVal + "        int currentStreamLength = byteBuffer.remaining();\n";
+    //     int currentLength = 2;
+    //     boolean hasVariableLength = false;
+    //     //Need to keep track of the variables that themselves have variable length
+    //     //so we can check them when accounting for packet length
+    //     for(String currentData : type.getData()){
+    //         switch(typeMap.get(currentData)){
+    //             case "FIXED_INT":
+    //                 currentLength = currentLength + 4; // size of int
+    //                 break;
+    //             case "FIXED_FLOAT":
+    //                 currentLength = currentLength + 4; // size of float
+    //                 break;
+    //             case "FIXED_LONG":
+    //                 currentLength = currentLength + 8; // size of long
+    //                 break;
+    //             case "VAR_STRING":
+    //                 currentLength = currentLength + 4; // size of entry in variable length table
+    //                 hasVariableLength = true;
+    //                 break;
+    //             case "BYTE_ARRAY":
+    //                 hasVariableLength = true;
+    //                 currentLength = currentLength + 4; // size of entry in variable length table
+    //                 break;
+    //             case "FIXED_DOUBLE":
+    //                 currentLength = currentLength + 8; // size of long
+    //                 break;
+    //         }
+    //     }
+    //     rVal = rVal + "        if(currentStreamLength < " + currentLength +"){\n";
+    //     rVal = rVal + "            return false;\n";
+    //     rVal = rVal + "        }\n";
+
+    //     //
+    //     //if there are variable-length types, read the variable length table
+    //     if(hasVariableLength){
+    //         rVal = rVal + "        int lenAccumulator = 0;\n";
+    //         for(String currentData : type.getData()){
+    //             switch(typeMap.get(currentData)){
+    //                 case "VAR_STRING": {
+    //                     rVal = rVal + "        lenAccumulator = lenAccumulator + byteBuffer.getInt();\n";
+    //                 } break;
+    //             }
+    //         }
+    //         rVal = rVal + "        if(currentStreamLength < lenAccumulator){\n";
+    //         rVal = rVal + "            return false;\n";
+    //         rVal = rVal + "        }\n";
+    //     }
+
+    //     rVal = rVal + "        return true;\n";
+    //     rVal = rVal + "    }\n\n";
+    //     return rVal;
+    // }
 
     /**
      * Adds the getter comment to the string

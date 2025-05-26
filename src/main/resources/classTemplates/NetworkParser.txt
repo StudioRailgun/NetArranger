@@ -1,7 +1,7 @@
-import io.github.studiorailgun.CircularByteBuffer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +51,7 @@ public class NetworkParser {
     /**
      * The byte buffer for storing incoming bytes
      */
-    private CircularByteBuffer incomingByteBuffer = new CircularByteBuffer(CIRCULAR_BUFFER_SIZE);
+    private ByteBuffer incomingByteBuffer = ByteBuffer.allocate(CIRCULAR_BUFFER_SIZE);
 
     /**
      * The block array used to read blocks of bytes in
@@ -64,6 +64,11 @@ public class NetworkParser {
     private long totalBytesRead = 0;
 
     /**
+     * Number of bytes preserved between read calls
+     */
+    private int existingBytes = 0;
+
+    /**
      * If set to true, the parser will automatically release messages on send.
      * Otherwise, will not release when the message is sent.
      */
@@ -72,7 +77,7 @@ public class NetworkParser {
     /**
      * The map of messasge type -> custom function to produce the message from a byte stream
      */
-    private Map<Short,BiConsumer<NetworkMessage,CircularByteBuffer>> customParserMap = new HashMap<Short,BiConsumer<NetworkMessage,CircularByteBuffer>>();
+    private Map<Short,BiConsumer<NetworkMessage,ByteBuffer>> customParserMap = new HashMap<Short,BiConsumer<NetworkMessage,ByteBuffer>>();
     
     
     /**
@@ -91,19 +96,60 @@ public class NetworkParser {
     public void readMessagesIn() throws IOException {
         //read in bytes
         int bytesRead = 0;
-        while(incomingStream.available() > 0){
-            // nextValue = incomingStream.read();
-            bytesRead = incomingStream.read(readBuffer, 0, READ_BLOCK_SIZE);
-            if(bytesRead > 0){
-                incomingByteBuffer.add(readBuffer, bytesRead);
+        if(incomingStream.available() > 0){
+            //error check
+            if(incomingByteBuffer.position() > 0){
+                String message = "Invalid position!\n" +
+                "position: " + incomingByteBuffer.position() + "\n" +
+                "limit: " + incomingByteBuffer.limit() + "\n" +
+                "remaining: " + incomingByteBuffer.remaining() + "\n" +
+                "byte [0]: " + incomingByteBuffer.get(0) + "\n" +
+                "byte [1]: " + incomingByteBuffer.get(1) + "\n" +
+                "";
+                throw new Error(message);
             }
+
+            //make sure we have room to write
+            incomingByteBuffer.limit(CIRCULAR_BUFFER_SIZE);
+            incomingByteBuffer.position(existingBytes);
+
+            //read bytes into buffer
+            bytesRead = incomingStream.read(readBuffer, 0, READ_BLOCK_SIZE);
+            incomingByteBuffer.put(readBuffer, 0, bytesRead);
+
+            //fake flip
+            incomingByteBuffer.position(0);
+            incomingByteBuffer.limit(existingBytes + bytesRead);
+            existingBytes = existingBytes + bytesRead;
+
+            //tracking
             totalBytesRead = totalBytesRead + bytesRead;
         }
         //parse byte queue for messages
         //for each message, append to clientIncomingMessageQueue
         NetworkMessage newMessage;
-        while((newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer,this.pool,this.customParserMap))!=null){
-            incomingMessageQueue.add(newMessage);
+        if(existingBytes > 0 || bytesRead > 0){
+            while((newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer,this.pool,this.customParserMap)) != null){
+                incomingMessageQueue.add(newMessage);
+            }
+
+            //compact the byte buffer
+            incomingByteBuffer.compact();
+            existingBytes = incomingByteBuffer.position();
+            incomingByteBuffer.position(0);
+            incomingByteBuffer.limit(existingBytes);
+
+            //error check
+            if(CIRCULAR_BUFFER_SIZE - existingBytes < READ_BLOCK_SIZE){
+                String message = "Failed to parse messages!\n" +
+                "position: " + incomingByteBuffer.position() + "\n" +
+                "limit: " + incomingByteBuffer.limit() + "\n" +
+                "remaining: " + incomingByteBuffer.remaining() + "\n" +
+                "byte [0]: " + incomingByteBuffer.get(0) + "\n" +
+                "byte [1]: " + incomingByteBuffer.get(1) + "\n" +
+                "";
+                throw new Error(message);
+            }
         }
     }
     
@@ -200,7 +246,7 @@ public class NetworkParser {
      * @param messageSubtype The subtype of the message
      * @param parserFunc The parser function
      */
-    public void registerCustomParser(byte messageType, byte messageSubtype, BiConsumer<NetworkMessage,CircularByteBuffer> parserFunc){
+    public void registerCustomParser(byte messageType, byte messageSubtype, BiConsumer<NetworkMessage,ByteBuffer> parserFunc){
         short pair = (short)((messageType << 4) & messageSubtype);
         this.customParserMap.put(pair,parserFunc);
     }

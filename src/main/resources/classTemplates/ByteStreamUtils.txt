@@ -78,6 +78,13 @@ public class ByteStreamUtils {
         return rVal;
     }
 
+    public static String popStringFromByteBuffer(ByteBuffer buff, int len){
+        byte[] dest = new byte[len];
+        buff.get(dest, 0, len);
+        String rVal = new String(dest);
+        return rVal;
+    }
+
     public static byte[] popByteArrayFromByteQueue(List<Byte> queue){
         int length = popIntFromByteQueue(queue);
         byte[] bytes = new byte[length];
@@ -85,6 +92,12 @@ public class ByteStreamUtils {
             bytes[i] = queue.remove(0);
         }
         return bytes;
+    }
+
+    public static byte[] popByteArrayFromByteBuffer(ByteBuffer buff, int len){
+        byte[] dest = new byte[len];
+        buff.get(dest, 0, len);
+        return dest;
     }
 
     public static double popDoubleFromByteQueue(List<Byte> queue){
@@ -355,8 +368,6 @@ public class ByteStreamUtils {
     }
     
     public static void writeString(OutputStream stream, String s) throws IOException {
-        int length = s.length();
-        writeInt(stream, length);
         byte[] stringBytes = s.getBytes();
         stream.write(stringBytes);
     }

@@ -1,4 +1,8 @@
             }
+            if(rVal == null){
+                //failed to read the message
+                byteBuffer.position(initialPosition);
+            }
         }
         return rVal;
     }

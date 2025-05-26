@@ -43,10 +43,11 @@
      * @param customParserMap The map of message type/subtype to parser
      * @return The message if one is at the front of the byte stream, null otherwise
      */
-    public static NetworkMessage parseBytestreamForMessage(CircularByteBuffer byteBuffer, MessagePool pool, Map<Short,BiConsumer<NetworkMessage,CircularByteBuffer>> customParserMap){
+    public static NetworkMessage parseBytestreamForMessage(ByteBuffer byteBuffer, MessagePool pool, Map<Short,BiConsumer<NetworkMessage,ByteBuffer>> customParserMap){
         NetworkMessage rVal = null;
         byte firstByte;
         byte secondByte;
-        if(byteBuffer.getRemaining() > 1){
-            firstByte = byteBuffer.peek();
+        int initialPosition = byteBuffer.position();
+        if(byteBuffer.remaining() >= 2){
+            firstByte = byteBuffer.get();
             switch(firstByte){
