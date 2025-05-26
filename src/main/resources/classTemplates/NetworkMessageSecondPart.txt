@@ -16,6 +16,11 @@
     byte[] rawBytes;
 
     /**
+     * Extra data that can be attached to a message optionally (used for reading in messages, does not affect ougoing messages).
+     */
+    private List<Object> extraData;
+
+    /**
      * Gets the type of the message
      * @return The type of the message
      */

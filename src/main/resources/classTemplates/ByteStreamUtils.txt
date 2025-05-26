@@ -163,6 +163,22 @@ public class ByteStreamUtils {
         bufferLock.release();
         return rVal;
     }
+
+    public static short popShortFromByteQueue(CircularByteBuffer byteBuffer){
+        short rVal = -1;
+        bufferLock.acquireUninterruptibly();
+        integerCompactor.clear();
+        integerCompactor.position(0);
+        integerCompactor.limit(2);
+        integerCompactor.put(0,byteBuffer.peek(0));
+        integerCompactor.put(1,byteBuffer.peek(1));
+        byteBuffer.read(2);
+        integerCompactor.position(0);
+        integerCompactor.limit(2);
+        rVal = integerCompactor.getShort();
+        bufferLock.release();
+        return rVal;
+    }
     
     public static String popStringFromByteQueue(CircularByteBuffer byteBuffer){
         int length = popIntFromByteQueue(byteBuffer);

@@ -21,6 +21,22 @@
      * Serializes the message
      */
     abstract void serialize();
+
+    /**
+     * Gets the extra data attached to the message
+     * @return The extra data if it exists, null otherwise
+     */
+    public List<Object> getExtraData(){
+        return this.extraData;
+    }
+
+    /**
+     * Sets the extra data on the message
+     * @param extraData The extra data
+     */
+    public void setExtraData(List<Object> extraData){
+        this.extraData = extraData;
+    }
     
 }
 
