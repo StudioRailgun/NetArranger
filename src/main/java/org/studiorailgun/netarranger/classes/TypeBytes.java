@@ -30,7 +30,7 @@ public class TypeBytes extends SourceGenerator {
         
         //add type bytes for categories
         fullFile = fullFile + "    /**\n     * Message categories\n     */\n";
-        int incrementer = 0;
+        int incrementer = 1;
         for(Category cat : config.getCategories()){
             fullFile = fullFile + "    public static final byte MESSAGE_TYPE_" + cat.getCategoryName().toUpperCase() + " = " + incrementer + ";\n";
             incrementer++;

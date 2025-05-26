@@ -54,6 +54,10 @@ public class NetworkMessage extends SourceGenerator {
             fullFile = fullFile + "                }\n";
             fullFile = fullFile + "                break;\n";
         }
+
+        //error checking
+        fullFile = fullFile + "                default:\n";
+        fullFile = fullFile + "                throw new Error(\"Unsupported message type! \" + firstByte);\n";
         
         //third part of file
         fullFile = fullFile + Utilities.readBakedResourceToString(Main.class.getResourceAsStream("/classTemplates/NetworkMessageThirdPart.txt"));

@@ -78,6 +78,11 @@ public class NetworkParser {
      * The map of messasge type -> custom function to produce the message from a byte stream
      */
     private Map<Short,BiConsumer<NetworkMessage,ByteBuffer>> customParserMap = new HashMap<Short,BiConsumer<NetworkMessage,ByteBuffer>>();
+
+    /**
+     * Stores the most recent message type for debugging purposes
+     */
+    private NetworkMessage mostRecentMessage = null;
     
     
     /**
@@ -118,9 +123,9 @@ public class NetworkParser {
             incomingByteBuffer.put(readBuffer, 0, bytesRead);
 
             //fake flip
-            incomingByteBuffer.position(0);
-            incomingByteBuffer.limit(existingBytes + bytesRead);
             existingBytes = existingBytes + bytesRead;
+            incomingByteBuffer.position(0);
+            incomingByteBuffer.limit(existingBytes);
 
             //tracking
             totalBytesRead = totalBytesRead + bytesRead;
@@ -129,8 +134,15 @@ public class NetworkParser {
         //for each message, append to clientIncomingMessageQueue
         NetworkMessage newMessage;
         if(existingBytes > 0 || bytesRead > 0){
-            while((newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer,this.pool,this.customParserMap)) != null){
-                incomingMessageQueue.add(newMessage);
+            try {
+                newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer,this.pool,this.customParserMap);
+                while(newMessage != null){
+                    mostRecentMessage = newMessage;
+                    incomingMessageQueue.add(newMessage);
+                    newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer,this.pool,this.customParserMap);
+                }
+            } catch (Error e){
+                throw new Error(mostRecentMessage + " failed to parse!",e);
             }
 
             //compact the byte buffer
@@ -247,7 +259,7 @@ public class NetworkParser {
      * @param parserFunc The parser function
      */
     public void registerCustomParser(byte messageType, byte messageSubtype, BiConsumer<NetworkMessage,ByteBuffer> parserFunc){
-        short pair = (short)((messageType << 4) & messageSubtype);
+        short pair = (short)((messageType << 4) | messageSubtype);
         this.customParserMap.put(pair,parserFunc);
     }
 

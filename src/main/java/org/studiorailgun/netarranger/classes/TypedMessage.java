@@ -503,7 +503,7 @@ public class TypedMessage extends SourceGenerator {
                 for(String data : type.getData()){
                     switch(typeMap.get(data)){
                         case "VAR_STRING": {
-                            fullFile = fullFile + "                ByteStreamUtils.writeInt(stream, " + data + ".length());\n";
+                            fullFile = fullFile + "                ByteStreamUtils.writeInt(stream, " + data + ".getBytes().length);\n";
                         } break;
                         case "BYTE_ARRAY": {
                             //serialize header that contains length of byte array
@@ -665,7 +665,7 @@ public class TypedMessage extends SourceGenerator {
         //check for parser type
         if(type.getCustomParser() != null && type.getCustomParser() == true){
             //custom parser provided by user per-app
-            rVal = rVal + "        short pair = (short)((TypeBytes.MESSAGE_TYPE_" + cat.getCategoryName().toUpperCase() + " << 4) & TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + ");\n";
+            rVal = rVal + "        short pair = (short)((TypeBytes.MESSAGE_TYPE_" + cat.getCategoryName().toUpperCase() + " << 4) | TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + ");\n";
             rVal = rVal + "        BiConsumer<NetworkMessage,ByteBuffer> customParser = customParserMap.get(pair);\n";
             rVal = rVal + "        if(customParser == null){\n";
             rVal = rVal + "            throw new Error(\"Custom parser undefined for message pair!\");\n";
