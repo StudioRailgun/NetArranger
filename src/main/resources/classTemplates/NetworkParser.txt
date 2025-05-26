@@ -2,8 +2,11 @@ import io.github.studiorailgun.CircularByteBuffer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiConsumer;
 
 /**
  * The main message parser. This is used to serialize/deserialize messages to/from the provided streams.
@@ -23,53 +26,53 @@ public class NetworkParser {
     /**
      * The input stream for the parser
      */
-    InputStream incomingStream;
+    private InputStream incomingStream;
 
     /**
      * The output stream for the parser
      */
-    OutputStream outgoingStream;
+    private OutputStream outgoingStream;
     
     /**
      * The queue of incoming messages that have been parsed
      */
-    CopyOnWriteArrayList<NetworkMessage> incomingMessageQueue = new CopyOnWriteArrayList<NetworkMessage>();
+    private CopyOnWriteArrayList<NetworkMessage> incomingMessageQueue = new CopyOnWriteArrayList<NetworkMessage>();
 
     /**
      * The queue of outgoing messages that have yet to be sent
      */
-    CopyOnWriteArrayList<NetworkMessage> outgoingMessageQueue = new CopyOnWriteArrayList<NetworkMessage>();
+    private CopyOnWriteArrayList<NetworkMessage> outgoingMessageQueue = new CopyOnWriteArrayList<NetworkMessage>();
 
     /**
      * Message object pool
      */
-    MessagePool pool = new MessagePool();
+    private MessagePool pool = new MessagePool();
     
     /**
      * The byte buffer for storing incoming bytes
      */
-    CircularByteBuffer incomingByteBuffer = new CircularByteBuffer(CIRCULAR_BUFFER_SIZE);
+    private CircularByteBuffer incomingByteBuffer = new CircularByteBuffer(CIRCULAR_BUFFER_SIZE);
 
     /**
      * The block array used to read blocks of bytes in
      */
-    byte[] readBuffer = new byte[READ_BLOCK_SIZE];
-
-    /**
-     * The outgoing byte buffer
-     */
-    CopyOnWriteArrayList<Byte> outgoingByteQueue = new CopyOnWriteArrayList<Byte>();
+    private byte[] readBuffer = new byte[READ_BLOCK_SIZE];
 
     /**
      * The number of bytes read
      */
-    long totalBytesRead = 0;
+    private long totalBytesRead = 0;
 
     /**
      * If set to true, the parser will automatically release messages on send.
      * Otherwise, will not release when the message is sent.
      */
-    boolean releaseOnSend = true;
+    private boolean releaseOnSend = true;
+
+    /**
+     * The map of messasge type -> custom function to produce the message from a byte stream
+     */
+    private Map<Short,BiConsumer<NetworkMessage,CircularByteBuffer>> customParserMap = new HashMap<Short,BiConsumer<NetworkMessage,CircularByteBuffer>>();
     
     
     /**
@@ -99,7 +102,7 @@ public class NetworkParser {
         //parse byte queue for messages
         //for each message, append to clientIncomingMessageQueue
         NetworkMessage newMessage;
-        while((newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer,this.pool))!=null){
+        while((newMessage = NetworkMessage.parseBytestreamForMessage(incomingByteBuffer,this.pool,this.customParserMap))!=null){
             incomingMessageQueue.add(newMessage);
         }
     }
@@ -189,6 +192,17 @@ public class NetworkParser {
      */
     public void setReleaseOnSend(boolean releaseOnSend){
         this.releaseOnSend = releaseOnSend;
+    }
+
+    /**
+     * Registers a custom parser for a given message type/subtype
+     * @param messageType The type of message
+     * @param messageSubtype The subtype of the message
+     * @param parserFunc The parser function
+     */
+    public void registerCustomParser(byte messageType, byte messageSubtype, BiConsumer<NetworkMessage,CircularByteBuffer> parserFunc){
+        short pair = (short)((messageType << 4) & messageSubtype);
+        this.customParserMap.put(pair,parserFunc);
     }
 
 }

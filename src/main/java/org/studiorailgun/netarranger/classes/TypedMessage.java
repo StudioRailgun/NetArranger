@@ -114,6 +114,8 @@ public class TypedMessage extends SourceGenerator {
             fullFile = fullFile + "import java.util.LinkedList;\n";
             fullFile = fullFile + "import java.util.List;\n\n";
         }
+        fullFile = fullFile + "import java.util.Map;\n";
+        fullFile = fullFile + "import java.util.function.BiConsumer;\n\n";
         
         //add description comment if defined
         if(cat.getDescription() != null){
@@ -591,30 +593,42 @@ public class TypedMessage extends SourceGenerator {
         rVal = rVal + "    /**\n";
         rVal = rVal + "     * Parses a message of type " + type.getMessageName() + "\n";
         rVal = rVal + "     */\n";
-        rVal = rVal + "    public static " + cat.getCategoryName() + "Message parse" + type.getMessageName() + "Message(CircularByteBuffer byteBuffer, MessagePool pool){\n";
+        rVal = rVal + "    public static " + cat.getCategoryName() + "Message parse" + type.getMessageName() + "Message(CircularByteBuffer byteBuffer, MessagePool pool, Map<Short,BiConsumer<NetworkMessage,CircularByteBuffer>> customParserMap){\n";
         rVal = rVal + "        " + cat.getCategoryName() + "Message rVal = (" + cat.getCategoryName() + "Message)pool.get(MessageType." + cat.getCategoryName().toUpperCase() + "_MESSAGE);\n";
         rVal = rVal + "        rVal.messageType = " + cat.getCategoryName() + "MessageType." + type.getMessageName().toUpperCase() + ";\n";
         rVal = rVal + "        " + cat.getCategoryName() + "Message.stripPacketHeader(byteBuffer);\n";
-        for(String data : type.getData()){
-            switch(typeMap.get(data)){
-                case "FIXED_INT":
-                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popIntFromByteQueue(byteBuffer));\n";
-                    break;
-                case "FIXED_FLOAT":
-                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popFloatFromByteQueue(byteBuffer));\n";
-                    break;
-                case "FIXED_LONG":
-                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popLongFromByteQueue(byteBuffer));\n";
-                    break;
-                case "VAR_STRING":
-                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popStringFromByteQueue(byteBuffer));\n";
-                    break;
-                case "BYTE_ARRAY":
-                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popByteArrayFromByteQueue(byteBuffer));\n";
-                    break;
-                case "FIXED_DOUBLE":
-                    rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popDoubleFromByteQueue(byteBuffer));\n";
-                    break;
+        //check for parser type
+        if(type.getCustomParser() != null && type.getCustomParser() == true){
+            //custom parser provided by user per-app
+            rVal = rVal + "        short pair = (short)((TypeBytes.MESSAGE_TYPE_" + cat.getCategoryName().toUpperCase() + " << 4) & TypeBytes." + cat.getCategoryName().toUpperCase() + "_MESSAGE_TYPE_" + type.getMessageName().toUpperCase() + ");\n";
+            rVal = rVal + "        BiConsumer<NetworkMessage,CircularByteBuffer> customParser = customParserMap.get(pair);\n";
+            rVal = rVal + "        if(customParser == null){\n";
+            rVal = rVal + "            throw new Error(\"Custom parser undefined for message pair!\");\n";
+            rVal = rVal + "        }\n";
+            rVal = rVal + "        customParser.accept(rVal,byteBuffer);\n";
+        } else {
+            //traditional parsing
+            for(String data : type.getData()){
+                switch(typeMap.get(data)){
+                    case "FIXED_INT":
+                        rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popIntFromByteQueue(byteBuffer));\n";
+                        break;
+                    case "FIXED_FLOAT":
+                        rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popFloatFromByteQueue(byteBuffer));\n";
+                        break;
+                    case "FIXED_LONG":
+                        rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popLongFromByteQueue(byteBuffer));\n";
+                        break;
+                    case "VAR_STRING":
+                        rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popStringFromByteQueue(byteBuffer));\n";
+                        break;
+                    case "BYTE_ARRAY":
+                        rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popByteArrayFromByteQueue(byteBuffer));\n";
+                        break;
+                    case "FIXED_DOUBLE":
+                        rVal = rVal + "        rVal.set" + data + "(ByteStreamUtils.popDoubleFromByteQueue(byteBuffer));\n";
+                        break;
+                }
             }
         }
         rVal = rVal + "        return rVal;\n";

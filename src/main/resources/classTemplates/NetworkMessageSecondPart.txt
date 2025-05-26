@@ -35,9 +35,10 @@
      * Parses the byte stream for the next message
      * @param byteBuffer The byte buffer
      * @param pool The message pool
+     * @param customParserMap The map of message type/subtype to parser
      * @return The message if one is at the front of the byte stream, null otherwise
      */
-    public static NetworkMessage parseBytestreamForMessage(CircularByteBuffer byteBuffer, MessagePool pool){
+    public static NetworkMessage parseBytestreamForMessage(CircularByteBuffer byteBuffer, MessagePool pool, Map<Short,BiConsumer<NetworkMessage,CircularByteBuffer>> customParserMap){
         NetworkMessage rVal = null;
         byte firstByte;
         byte secondByte;
