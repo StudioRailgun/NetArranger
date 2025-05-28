@@ -55,6 +55,11 @@ public class TypedMessage extends SourceGenerator {
         HashMap<String,Boolean> fixedSizeVariableMap = new HashMap<String,Boolean>();
         for(Data data : cat.getData()){
             switch(data.getType()){
+                case "FIXED_BOOL": {
+                    fixedSizeVariableMap.put(data.getName(), true);
+                    usesByteUtils = true;
+                    hasFixedData = true;
+                } break;
                 case "FIXED_INT": {
                     fixedSizeVariableMap.put(data.getName(), true);
                     usesByteUtils = true;
@@ -140,24 +145,27 @@ public class TypedMessage extends SourceGenerator {
                 fullFile = fullFile + "     */\n";
             }
             switch(variable.getType()){
-                case "FIXED_INT":
+                case "FIXED_BOOL": {
+                    fullFile = fullFile + "    boolean " + variable.getName() + ";\n";
+                } break;
+                case "FIXED_INT": {
                     fullFile = fullFile + "    int " + variable.getName() + ";\n";
-                    break;
-                case "FIXED_FLOAT":
+                } break;
+                case "FIXED_FLOAT": {
                     fullFile = fullFile + "    float " + variable.getName() + ";\n";
-                    break;
-                case "FIXED_LONG":
+                } break;
+                case "FIXED_LONG": {
                     fullFile = fullFile + "    long " + variable.getName() + ";\n";
-                    break;
-                case "VAR_STRING":
+                } break;
+                case "VAR_STRING": {
                     fullFile = fullFile + "    String " + variable.getName() + ";\n";
-                    break;
-                case "BYTE_ARRAY":
+                } break;
+                case "BYTE_ARRAY": {
                     fullFile = fullFile + "    byte[] " + variable.getName() + ";\n";
-                    break;
-                case "FIXED_DOUBLE":
+                } break;
+                case "FIXED_DOUBLE": {
                     fullFile = fullFile + "    double " + variable.getName() + ";\n";
-                    break;
+                } break;
             }
         }
         fullFile = fullFile + "\n";
@@ -188,7 +196,19 @@ public class TypedMessage extends SourceGenerator {
         //getters and setters for each data
         for(Data variable : cat.getData()){
             switch(variable.getType()){
-                case "FIXED_INT":
+                case "FIXED_BOOL": {
+                    //getter
+                    fullFile = this.addGetterComment(fullFile,variable);
+                    fullFile = fullFile + "    public boolean get" + variable.getName() + "() {\n";
+                    fullFile = fullFile + "        return " + variable.getName() + ";\n";
+                    fullFile = fullFile + "    }\n\n";
+                    //setter
+                    fullFile = this.addSetterComment(fullFile,variable);
+                    fullFile = fullFile + "    public void set" + variable.getName() + "(boolean " + variable.getName() + ") {\n";
+                    fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
+                    fullFile = fullFile + "    }\n\n";
+                } break;
+                case "FIXED_INT": {
                     //getter
                     fullFile = this.addGetterComment(fullFile,variable);
                     fullFile = fullFile + "    public int get" + variable.getName() + "() {\n";
@@ -199,8 +219,8 @@ public class TypedMessage extends SourceGenerator {
                     fullFile = fullFile + "    public void set" + variable.getName() + "(int " + variable.getName() + ") {\n";
                     fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
-                    break;
-                case "FIXED_FLOAT":
+                } break;
+                case "FIXED_FLOAT": {
                     //getter
                     fullFile = this.addGetterComment(fullFile,variable);
                     fullFile = fullFile + "    public float get" + variable.getName() + "() {\n";
@@ -211,8 +231,8 @@ public class TypedMessage extends SourceGenerator {
                     fullFile = fullFile + "    public void set" + variable.getName() + "(float " + variable.getName() + ") {\n";
                     fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
-                    break;
-                case "FIXED_LONG":
+                } break;
+                case "FIXED_LONG": {
                     //getter
                     fullFile = this.addGetterComment(fullFile,variable);
                     fullFile = fullFile + "    public long get" + variable.getName() + "() {\n";
@@ -223,8 +243,8 @@ public class TypedMessage extends SourceGenerator {
                     fullFile = fullFile + "    public void set" + variable.getName() + "(long " + variable.getName() + ") {\n";
                     fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
-                    break;
-                case "VAR_STRING":
+                } break;
+                case "VAR_STRING": {
                     //getter
                     fullFile = this.addGetterComment(fullFile,variable);
                     fullFile = fullFile + "    public String get" + variable.getName() + "() {\n";
@@ -235,8 +255,8 @@ public class TypedMessage extends SourceGenerator {
                     fullFile = fullFile + "    public void set" + variable.getName() + "(String " + variable.getName() + ") {\n";
                     fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
-                    break;
-                case "BYTE_ARRAY":
+                } break;
+                case "BYTE_ARRAY": {
                     //getter
                     fullFile = this.addGetterComment(fullFile,variable);
                     fullFile = fullFile + "    public byte[] get" + variable.getName() + "() {\n";
@@ -247,8 +267,8 @@ public class TypedMessage extends SourceGenerator {
                     fullFile = fullFile + "    public void set" + variable.getName() + "(byte[] " + variable.getName() + ") {\n";
                     fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
-                    break;
-                case "FIXED_DOUBLE":
+                } break;
+                case "FIXED_DOUBLE": {
                     //getter
                     fullFile = this.addGetterComment(fullFile,variable);
                     fullFile = fullFile + "    public double get" + variable.getName() + "() {\n";
@@ -259,7 +279,7 @@ public class TypedMessage extends SourceGenerator {
                     fullFile = fullFile + "    public void set" + variable.getName() + "(double " + variable.getName() + ") {\n";
                     fullFile = fullFile + "        this." + variable.getName() + " = " + variable.getName() + ";\n";
                     fullFile = fullFile + "    }\n\n";
-                    break;
+                } break;
             }
         }
         
@@ -305,24 +325,27 @@ public class TypedMessage extends SourceGenerator {
             fullFile = fullFile + "    public static " + cat.getCategoryName() + "Message construct" + type.getMessageName() + "Message(";
             for(String data : type.getData()){
                 switch(typeMap.get(data)){
-                    case "FIXED_INT":
+                    case "FIXED_BOOL": {
+                        fullFile = fullFile + "boolean " + data + ",";
+                    } break;
+                    case "FIXED_INT": {
                         fullFile = fullFile + "int " + data + ",";
-                        break;
-                    case "FIXED_FLOAT":
+                    } break;
+                    case "FIXED_FLOAT": {
                         fullFile = fullFile + "float " + data + ",";
-                        break;
-                    case "FIXED_LONG":
+                    } break;
+                    case "FIXED_LONG": {
                         fullFile = fullFile + "long " + data + ",";
-                        break;
-                    case "VAR_STRING":
+                    } break;
+                    case "VAR_STRING": {
                         fullFile = fullFile + "String " + data + ",";
-                        break;
-                    case "BYTE_ARRAY":
+                    } break;
+                    case "BYTE_ARRAY": {
                         fullFile = fullFile + "byte[] " + data + ",";
-                        break;
-                    case "FIXED_DOUBLE":
+                    } break;
+                    case "FIXED_DOUBLE": {
                         fullFile = fullFile + "double " + data + ",";
-                        break;
+                    } break;
                 }
             }
             //chop off last comma
@@ -360,24 +383,27 @@ public class TypedMessage extends SourceGenerator {
             String packetSizeCalculation = "2"; // 2 for packet header
             for(String variable : type.getData()){
                 switch(typeMap.get(variable)){
-                    case "FIXED_INT":
+                    case "FIXED_BOOL": {
+                        packetSizeCalculation = packetSizeCalculation + "+1";
+                    } break;
+                    case "FIXED_INT": {
                         packetSizeCalculation = packetSizeCalculation + "+4";
-                        break;
-                    case "FIXED_FLOAT":
+                    } break;
+                    case "FIXED_FLOAT": {
                         packetSizeCalculation = packetSizeCalculation + "+4";
-                        break;
-                    case "FIXED_LONG":
+                    } break;
+                    case "FIXED_LONG": {
                         packetSizeCalculation = packetSizeCalculation + "+8";
-                        break;
-                    case "VAR_STRING":
+                    } break;
+                    case "VAR_STRING": {
                         packetSizeCalculation = packetSizeCalculation + "+4+" + variable + ".length()"; // 4 for integer header
-                        break;
-                    case "BYTE_ARRAY":
+                    } break;
+                    case "BYTE_ARRAY": {
                         packetSizeCalculation = packetSizeCalculation + "+4+" + variable + ".length"; // 4 for integer header
-                        break;
-                    case "FIXED_DOUBLE":
+                    } break;
+                    case "FIXED_DOUBLE": {
                         packetSizeCalculation = packetSizeCalculation + "+8";
-                        break;
+                    } break;
                 }
             }
             fullFile = fullFile + "                rawBytes = new byte[" + packetSizeCalculation + "];\n";
@@ -389,28 +415,32 @@ public class TypedMessage extends SourceGenerator {
             String offsetFunctions = "";
             for(String data : type.getData()){
                 switch(typeMap.get(data)){
-                    case "FIXED_INT":
+                    case "FIXED_BOOL": {
+                        fullFile = fullFile + "                rawBytes[" + offset + offsetFunctions + "] = " + data + " ? (byte)1 : (byte)0;\n";
+                        offset = offset + 4;
+                    } break;
+                    case "FIXED_INT": {
                         fullFile = fullFile + "                intValues = ByteStreamUtils.serializeIntToBytes(" + data + ");\n";
                         fullFile = fullFile + "                for(int i = 0; i < 4; i++){\n";
                         fullFile = fullFile + "                    rawBytes[" + offset + offsetFunctions + "+i] = intValues[i];\n";
                         fullFile = fullFile + "                }\n";
                         offset = offset + 4;
-                        break;
-                    case "FIXED_FLOAT":
+                    } break;
+                    case "FIXED_FLOAT": {
                         fullFile = fullFile + "                intValues = ByteStreamUtils.serializeFloatToBytes(" + data + ");\n";
                         fullFile = fullFile + "                for(int i = 0; i < 4; i++){\n";
                         fullFile = fullFile + "                    rawBytes[" + offset + offsetFunctions + "+i] = intValues[i];\n";
                         fullFile = fullFile + "                }";
                         offset = offset + 4;
-                        break;
-                    case "FIXED_LONG":
+                    } break;
+                    case "FIXED_LONG": {
                         fullFile = fullFile + "                intValues = ByteStreamUtils.serializeLongToBytes(" + data + ");\n";
                         fullFile = fullFile + "                for(int i = 0; i < 8; i++){\n";
                         fullFile = fullFile + "                    rawBytes[" + offset + offsetFunctions + "+i] = intValues[i];\n";
                         fullFile = fullFile + "                }\n";
                         offset = offset + 8;
-                        break;
-                    case "VAR_STRING":
+                    } break;
+                    case "VAR_STRING": {
                         fullFile = fullFile + "                intValues = ByteStreamUtils.serializeIntToBytes(" + data + ".length());\n";
                         fullFile = fullFile + "                for(int i = 0; i < 4; i++){\n";
                         fullFile = fullFile + "                    rawBytes[" + offset + offsetFunctions + "+i] = intValues[i];\n";
@@ -421,8 +451,8 @@ public class TypedMessage extends SourceGenerator {
                         fullFile = fullFile + "                    rawBytes[" + offset + offsetFunctions + "+i] = stringBytes[i];\n";
                         fullFile = fullFile + "                }\n";
                         offsetFunctions = offsetFunctions + "+" + data + ".length()";
-                        break;
-                    case "BYTE_ARRAY":
+                    } break;
+                    case "BYTE_ARRAY": {
                         //serialize header that contains length of byte array
                         fullFile = fullFile + "                intValues = ByteStreamUtils.serializeIntToBytes(" + data + ".length);\n";
                         fullFile = fullFile + "                for(int i = 0; i < 4; i++){\n";
@@ -434,14 +464,14 @@ public class TypedMessage extends SourceGenerator {
                         fullFile = fullFile + "                    rawBytes[" + offset + offsetFunctions + "+i] = " + data + "[i];\n";
                         fullFile = fullFile + "                }\n";
                         offsetFunctions = offsetFunctions + "+" + data + ".length";
-                        break;
-                    case "FIXED_DOUBLE":
+                    } break;
+                    case "FIXED_DOUBLE": {
                         fullFile = fullFile + "                intValues = ByteStreamUtils.serializeDoubleToBytes(" + data + ");\n";
                         fullFile = fullFile + "                for(int i = 0; i < 8; i++){\n";
                         fullFile = fullFile + "                    rawBytes[" + offset + offsetFunctions + "+i] = intValues[i];\n";
                         fullFile = fullFile + "                }\n";
                         offset = offset + 8;
-                        break;
+                    } break;
                 }
             }
             fullFile = fullFile + "                break;\n";
@@ -466,26 +496,29 @@ public class TypedMessage extends SourceGenerator {
             boolean variableLengthPacket = false;
             for(String variable : type.getData()){
                 switch(typeMap.get(variable)){
-                    case "FIXED_INT":
+                    case "FIXED_BOOL": {
+                        packetSizeCalculation = packetSizeCalculation + "+1";
+                    } break;
+                    case "FIXED_INT": {
                         packetSizeCalculation = packetSizeCalculation + "+4";
-                        break;
-                    case "FIXED_FLOAT":
+                    } break;
+                    case "FIXED_FLOAT": {
                         packetSizeCalculation = packetSizeCalculation + "+4";
-                        break;
-                    case "FIXED_LONG":
+                    } break;
+                    case "FIXED_LONG": {
                         packetSizeCalculation = packetSizeCalculation + "+8";
-                        break;
-                    case "VAR_STRING":
+                    } break;
+                    case "VAR_STRING": {
                         packetSizeCalculation = packetSizeCalculation + "+4+" + variable + ".length()"; // 4 for integer header
                         variableLengthPacket = true;
-                        break;
-                    case "BYTE_ARRAY":
+                    } break;
+                    case "BYTE_ARRAY": {
                         packetSizeCalculation = packetSizeCalculation + "+4+" + variable + ".length"; // 4 for integer header
                         variableLengthPacket = true;
-                        break;
-                    case "FIXED_DOUBLE":
+                    } break;
+                    case "FIXED_DOUBLE": {
                         packetSizeCalculation = packetSizeCalculation + "+8";
-                        break;
+                    } break;
                 }
             }
             fullFile = fullFile + "                \n";
@@ -519,6 +552,9 @@ public class TypedMessage extends SourceGenerator {
             String offsetFunctions = "";
             for(String data : type.getData()){
                 switch(typeMap.get(data)){
+                    case "FIXED_BOOL": {
+                        fullFile = fullFile + "                stream.write(" + data + " ? (byte)1 : (byte)0);\n";
+                    } break;
                     case "FIXED_INT": {
                         fullFile = fullFile + "                ByteStreamUtils.writeInt(stream, " + data + ");\n";
                     } break;
@@ -607,26 +643,29 @@ public class TypedMessage extends SourceGenerator {
         //so we can check them when accounting for packet length
         for(String currentData : type.getData()){
             switch(typeMap.get(currentData)){
-                case "FIXED_INT":
+                case "FIXED_BOOL": {
+                    currentLength = currentLength + 4; // size of boolean
+                } break;
+                case "FIXED_INT": {
                     currentLength = currentLength + 4; // size of int
-                    break;
-                case "FIXED_FLOAT":
+                } break;
+                case "FIXED_FLOAT": {
                     currentLength = currentLength + 4; // size of float
-                    break;
-                case "FIXED_LONG":
+                } break;
+                case "FIXED_LONG": {
                     currentLength = currentLength + 8; // size of long
-                    break;
-                case "VAR_STRING":
+                } break;
+                case "VAR_STRING": {
                     currentLength = currentLength + 4; // size of entry in variable length table
                     hasVariableLength = true;
-                    break;
-                case "BYTE_ARRAY":
+                } break;
+                case "BYTE_ARRAY": {
                     hasVariableLength = true;
                     currentLength = currentLength + 4; // size of entry in variable length table
-                    break;
-                case "FIXED_DOUBLE":
+                } break;
+                case "FIXED_DOUBLE": {
                     currentLength = currentLength + 8; // size of long
-                    break;
+                } break;
             }
         }
         rVal = rVal + "        if(byteBuffer.remaining() < " + currentLength +"){\n";
@@ -675,28 +714,31 @@ public class TypedMessage extends SourceGenerator {
             //traditional parsing
             for(String data : type.getData()){
                 switch(typeMap.get(data)){
-                    case "FIXED_INT":
+                    case "FIXED_BOOL": {
+                        rVal = rVal + "        rVal.set" + data + "(byteBuffer.get() == 1 ? true : false);\n";
+                    } break;
+                    case "FIXED_INT": {
                         rVal = rVal + "        rVal.set" + data + "(byteBuffer.getInt());\n";
-                        break;
-                    case "FIXED_FLOAT":
+                    } break;
+                    case "FIXED_FLOAT": {
                         rVal = rVal + "        rVal.set" + data + "(byteBuffer.getFloat());\n";
-                        break;
-                    case "FIXED_LONG":
+                    } break;
+                    case "FIXED_LONG": {
                         rVal = rVal + "        rVal.set" + data + "(byteBuffer.getLong());\n";
-                        break;
-                    case "VAR_STRING":
+                    } break;
+                    case "VAR_STRING": {
                         rVal = rVal + "        if(" + data + "len > 0){\n";
                         rVal = rVal + "            rVal.set" + data + "(ByteStreamUtils.popStringFromByteBuffer(byteBuffer, " + data + "len));\n";
                         rVal = rVal + "        }\n";
-                        break;
-                    case "BYTE_ARRAY":
+                    } break;
+                    case "BYTE_ARRAY": {
                         rVal = rVal + "        if(" + data + "len > 0){\n";
                         rVal = rVal + "            rVal.set" + data + "(ByteStreamUtils.popByteArrayFromByteBuffer(byteBuffer, " + data + "len));\n";
                         rVal = rVal + "        }\n";
-                        break;
-                    case "FIXED_DOUBLE":
+                    } break;
+                    case "FIXED_DOUBLE": {
                         rVal = rVal + "        rVal.set" + data + "(byteBuffer.getDouble());\n";
-                        break;
+                    } break;
                 }
             }
         }
@@ -704,73 +746,6 @@ public class TypedMessage extends SourceGenerator {
         rVal = rVal + "    }\n\n";
         return rVal;
     }
-    
-    /**
-     * Gets the function to check if a message type can be parsed from the bytestream
-     * @param cat The category of the message
-     * @param type The message type itself
-     * @param typeMap The types of all variables in the message
-     * @return The body of the function as a string
-     */
-    // static String getParseCheckTypeFunction(Category cat, MessageType type, HashMap<String,String> typeMap){
-    //     String rVal = "";
-    //     rVal = rVal + "    /**\n";
-    //     rVal = rVal + "     * Checks if a message of type " + type.getMessageName() + " can be parsed from the byte stream\n";
-    //     rVal = rVal + "     */\n";
-    //     rVal = rVal + "    public static boolean canParse" + type.getMessageName() + "Message(ByteBuffer byteBuffer){\n";
-    //     rVal = rVal + "        int currentStreamLength = byteBuffer.remaining();\n";
-    //     int currentLength = 2;
-    //     boolean hasVariableLength = false;
-    //     //Need to keep track of the variables that themselves have variable length
-    //     //so we can check them when accounting for packet length
-    //     for(String currentData : type.getData()){
-    //         switch(typeMap.get(currentData)){
-    //             case "FIXED_INT":
-    //                 currentLength = currentLength + 4; // size of int
-    //                 break;
-    //             case "FIXED_FLOAT":
-    //                 currentLength = currentLength + 4; // size of float
-    //                 break;
-    //             case "FIXED_LONG":
-    //                 currentLength = currentLength + 8; // size of long
-    //                 break;
-    //             case "VAR_STRING":
-    //                 currentLength = currentLength + 4; // size of entry in variable length table
-    //                 hasVariableLength = true;
-    //                 break;
-    //             case "BYTE_ARRAY":
-    //                 hasVariableLength = true;
-    //                 currentLength = currentLength + 4; // size of entry in variable length table
-    //                 break;
-    //             case "FIXED_DOUBLE":
-    //                 currentLength = currentLength + 8; // size of long
-    //                 break;
-    //         }
-    //     }
-    //     rVal = rVal + "        if(currentStreamLength < " + currentLength +"){\n";
-    //     rVal = rVal + "            return false;\n";
-    //     rVal = rVal + "        }\n";
-
-    //     //
-    //     //if there are variable-length types, read the variable length table
-    //     if(hasVariableLength){
-    //         rVal = rVal + "        int lenAccumulator = 0;\n";
-    //         for(String currentData : type.getData()){
-    //             switch(typeMap.get(currentData)){
-    //                 case "VAR_STRING": {
-    //                     rVal = rVal + "        lenAccumulator = lenAccumulator + byteBuffer.getInt();\n";
-    //                 } break;
-    //             }
-    //         }
-    //         rVal = rVal + "        if(currentStreamLength < lenAccumulator){\n";
-    //         rVal = rVal + "            return false;\n";
-    //         rVal = rVal + "        }\n";
-    //     }
-
-    //     rVal = rVal + "        return true;\n";
-    //     rVal = rVal + "    }\n\n";
-    //     return rVal;
-    // }
 
     /**
      * Adds the getter comment to the string

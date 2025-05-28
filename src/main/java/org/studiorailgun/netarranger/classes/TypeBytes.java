@@ -58,24 +58,27 @@ public class TypeBytes extends SourceGenerator {
                 boolean variableSize = false;
                 for(String variable : type.getData()){
                     switch(typeMap.get(variable)){
-                        case "FIXED_INT":
+                        case "FIXED_BOOL": {
+                            packetSize = packetSize + 1;
+                        } break;
+                        case "FIXED_INT": {
                             packetSize = packetSize + 4;
-                            break;
-                        case "FIXED_FLOAT":
+                        } break;
+                        case "FIXED_FLOAT": {
                             packetSize = packetSize + 4;
-                            break;
-                        case "FIXED_LONG":
+                        } break;
+                        case "FIXED_LONG": {
                             packetSize = packetSize + 8;
-                            break;
-                        case "VAR_STRING":
+                        } break;
+                        case "VAR_STRING": {
                             variableSize = true;
-                            break;
-                        case "FIXED_DOUBLE":
+                        } break;
+                        case "FIXED_DOUBLE": {
                             packetSize = packetSize + 8;
-                            break;
-                        case "BYTE_ARRAY":
+                        } break;
+                        case "BYTE_ARRAY": {
                             variableSize = true;
-                            break;
+                        } break;
                     }
                 }
                 if(!variableSize){
