@@ -78,7 +78,9 @@ public class MessagePool  extends SourceGenerator {
             } else {
                 fullFile = fullFile + "        } else if(message instanceof " + cat.getCategoryName() + "Message){\n";
             }
+            fullFile = fullFile + "            if(" + cat.getCategoryName().toLowerCase() + "MessagePool.size() < 1000){\n";
             fullFile = fullFile + "                " + cat.getCategoryName().toLowerCase() + "MessagePool.add(message);\n";
+            fullFile = fullFile + "            }\n";
             incrementer++;
         }
         fullFile = fullFile + "        } else {\n";
